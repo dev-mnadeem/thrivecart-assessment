@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
+use Acme\Basket\Config\DefaultPricing;
+use Acme\Basket\Http\Application;
+use Acme\Basket\Http\Request;
+
 require __DIR__ . '/../vendor/autoload.php';
 
-$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+// Composition root: the only place default pricing is wired into the HTTP layer.
+$application = new Application(
+    DefaultPricing::catalogue(),
+    DefaultPricing::deliveryRules(),
+    DefaultPricing::offers(),
+);
 
-header('Content-Type: application/json');
-
-if ($path === '/api/health' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
-    echo json_encode(['status' => 'ok'], JSON_THROW_ON_ERROR);
-
-    return;
-}
-
-http_response_code(404);
-echo json_encode(['error' => ['code' => 'NOT_FOUND', 'message' => 'Route not found.']], JSON_THROW_ON_ERROR);
+$application->handle(Request::fromGlobals())->send();

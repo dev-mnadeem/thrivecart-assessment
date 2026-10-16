@@ -4,7 +4,7 @@
   "description": "Acme Widget Co basket proof of concept: React/TypeScript frontend and PHP pricing API in a Turborepo monorepo.",
   "packageManager": "pnpm@10.34.9",
   "engines": {
-    "node": ">=22.12.0",
+    "node": ">=22.22.2",
     "pnpm": ">=10.0.0"
   },
   "scripts": {

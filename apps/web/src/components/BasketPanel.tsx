@@ -18,7 +18,7 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
     <section
       id="basket"
       aria-labelledby="basket-heading"
-      className="self-start rounded-2xl border border-slate-200 bg-white p-5 shadow-sm scroll-mt-4 lg:sticky lg:top-6"
+      className="scroll-mt-4 self-start rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-6"
     >
       <div className="flex items-center justify-between gap-3">
         <h2 id="basket-heading" className="flex items-center gap-2 text-lg font-semibold">

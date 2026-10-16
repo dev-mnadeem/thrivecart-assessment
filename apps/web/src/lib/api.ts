@@ -22,10 +22,13 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
 }
 
 async function request<T>(path: string, init: RequestInit): Promise<T> {
+  const headers = new Headers(init.headers);
+  headers.set('Accept', 'application/json');
+
   let response: Response;
 
   try {
-    response = await fetch(path, { ...init, headers: { Accept: 'application/json', ...init.headers } });
+    response = await fetch(path, { ...init, headers });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
       throw error;

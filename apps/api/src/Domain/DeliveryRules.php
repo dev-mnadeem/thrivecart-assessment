@@ -19,7 +19,7 @@ final readonly class DeliveryRules
 
     public function __construct(DeliveryTier ...$tiers)
     {
-        $thresholds = array_map(static fn (DeliveryTier $tier): int => $tier->minSubtotalCents, $tiers);
+        $thresholds = array_map(static fn(DeliveryTier $tier): int => $tier->minSubtotalCents, $tiers);
 
         if (!in_array(0, $thresholds, true)) {
             throw new InvalidArgumentException('Delivery rules need a tier starting at 0 cents.');
@@ -29,9 +29,9 @@ final readonly class DeliveryRules
             throw new InvalidArgumentException('Delivery tiers must have distinct thresholds.');
         }
 
-        usort($tiers, static fn (DeliveryTier $a, DeliveryTier $b): int => $b->minSubtotalCents <=> $a->minSubtotalCents);
+        usort($tiers, static fn(DeliveryTier $a, DeliveryTier $b): int => $b->minSubtotalCents <=> $a->minSubtotalCents);
 
-        $this->tiers = array_values($tiers);
+        $this->tiers = $tiers;
     }
 
     public function chargeFor(int $subtotalCents): int

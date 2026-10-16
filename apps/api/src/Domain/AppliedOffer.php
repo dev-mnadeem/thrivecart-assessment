@@ -9,6 +9,5 @@ final readonly class AppliedOffer
     public function __construct(
         public string $label,
         public int $discountCents,
-    ) {
-    }
+    ) {}
 }

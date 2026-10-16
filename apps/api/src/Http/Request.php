@@ -10,15 +10,16 @@ final readonly class Request
         public string $method,
         public string $path,
         public string $body = '',
-    ) {
-    }
+    ) {}
 
     public static function fromGlobals(): self
     {
-        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $path = is_string($uri) ? parse_url($uri, PHP_URL_PATH) : null;
 
         return new self(
-            strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET'),
+            is_string($method) ? strtoupper($method) : 'GET',
             is_string($path) ? $path : '/',
             (string) file_get_contents('php://input'),
         );

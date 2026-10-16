@@ -19,8 +19,7 @@ final readonly class BasketTotals
         public int $subtotalCents,
         public int $discountCents,
         public int $deliveryCents,
-    ) {
-    }
+    ) {}
 
     public function discountedSubtotalCents(): int
     {

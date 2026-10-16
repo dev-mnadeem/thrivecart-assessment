@@ -136,6 +136,37 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'Green Widget' })).toBeInTheDocument();
   });
 
+  it('shows a pricing error with retry, keeping the basket', async () => {
+    let failing = true;
+    mockApi({
+      quoteResponse: () =>
+        failing
+          ? Promise.resolve(json({ error: { code: 'NETWORK_ERROR', message: 'Could not reach the server.' } }, 503))
+          : undefined,
+    });
+    const user = await renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Add Blue Widget to basket' }));
+
+    expect(await basket().findByRole('alert')).toHaveTextContent('Could not reach the server.');
+    expect(basket().getByText('Blue Widget')).toBeInTheDocument();
+
+    failing = false;
+    await user.click(basket().getByRole('button', { name: 'Retry pricing' }));
+
+    await waitFor(() => expect(basket().getByTestId('basket-total')).toHaveTextContent('$12.90'));
+    expect(basket().queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows an updating indicator while a quote is in flight', async () => {
+    mockApi({ quoteResponse: () => new Promise<Response>(() => undefined) });
+    const user = await renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Add Green Widget to basket' }));
+
+    expect(basket().getByRole('status')).toHaveTextContent('Updating total…');
+  });
+
   it('ignores a stale quote that resolves after a newer one', async () => {
     let releaseFirst: (response: Response) => void = () => undefined;
     const firstQuote = new Promise<Response>((resolve) => {

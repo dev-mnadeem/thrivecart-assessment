@@ -34,8 +34,7 @@ final readonly class Application
         private DeliveryRules $deliveryRules,
         private array $offers,
         private QuoteRequestParser $parser = new QuoteRequestParser(),
-    ) {
-    }
+    ) {}
 
     public function handle(Request $request): JsonResponse
     {
@@ -72,7 +71,7 @@ final readonly class Application
     private function products(): JsonResponse
     {
         return new JsonResponse([
-            'products' => array_map(static fn (Product $product): array => [
+            'products' => array_map(static fn(Product $product): array => [
                 'code' => $product->code,
                 'name' => $product->name,
                 'priceCents' => $product->priceCents,
@@ -95,14 +94,14 @@ final readonly class Application
         $totals = $basket->breakdown();
 
         return new JsonResponse([
-            'items' => array_map(static fn (BasketLine $line): array => [
+            'items' => array_map(static fn(BasketLine $line): array => [
                 'code' => $line->product->code,
                 'name' => $line->product->name,
                 'unitPriceCents' => $line->product->priceCents,
                 'quantity' => $line->quantity,
                 'lineSubtotalCents' => $line->subtotalCents(),
             ], $totals->lines),
-            'appliedOffers' => array_map(static fn (AppliedOffer $offer): array => [
+            'appliedOffers' => array_map(static fn(AppliedOffer $offer): array => [
                 'label' => $offer->label,
                 'discountCents' => $offer->discountCents,
             ], $totals->appliedOffers),

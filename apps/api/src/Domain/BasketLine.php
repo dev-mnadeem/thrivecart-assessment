@@ -9,8 +9,7 @@ final readonly class BasketLine
     public function __construct(
         public Product $product,
         public int $quantity,
-    ) {
-    }
+    ) {}
 
     public function subtotalCents(): int
     {

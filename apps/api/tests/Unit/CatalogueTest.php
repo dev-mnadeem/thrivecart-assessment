@@ -32,7 +32,7 @@ final class CatalogueTest extends TestCase
 
     public function testListsProductsInConfiguredOrder(): void
     {
-        $codes = array_map(static fn (Product $product): string => $product->code, $this->catalogue->all());
+        $codes = array_map(static fn(Product $product): string => $product->code, $this->catalogue->all());
 
         self::assertSame(['R01', 'G01', 'B01'], $codes);
     }

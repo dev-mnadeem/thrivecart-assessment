@@ -24,7 +24,7 @@ final readonly class RedWidgetHalfPriceOffer implements OfferInterface
     {
         $matching = array_values(array_filter(
             $items,
-            static fn (Product $product): bool => $product->code === self::PRODUCT_CODE,
+            static fn(Product $product): bool => $product->code === self::PRODUCT_CODE,
         ));
 
         if ($matching === []) {

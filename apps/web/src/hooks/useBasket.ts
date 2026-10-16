@@ -70,16 +70,13 @@ export function useBasket(): BasketState {
     return () => controller.abort();
   }, [items, requestKey]);
 
-  const update = useCallback(
-    (next: BasketEntry[]) => {
-      setEntries(next);
+  const update = useCallback((next: BasketEntry[]) => {
+    setEntries(next);
 
-      if (next.length === 0) {
-        setLastQuote(null);
-      }
-    },
-    [],
-  );
+    if (next.length === 0) {
+      setLastQuote(null);
+    }
+  }, []);
 
   const add = useCallback(
     (code: ProductCode) =>

@@ -14,8 +14,7 @@ final readonly class JsonResponse
         public array $data,
         public int $status = 200,
         public array $headers = [],
-    ) {
-    }
+    ) {}
 
     public static function error(HttpException $exception): self
     {

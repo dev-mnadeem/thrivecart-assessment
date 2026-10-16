@@ -16,7 +16,14 @@ interface BasketLineItemProps {
 const iconButton =
   'inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition-colors hover:bg-slate-100';
 
-export function BasketLineItem({ product, quantity, pricedLine, onIncrement, onDecrement, onRemove }: BasketLineItemProps) {
+export function BasketLineItem({
+  product,
+  quantity,
+  pricedLine,
+  onIncrement,
+  onDecrement,
+  onRemove,
+}: BasketLineItemProps) {
   return (
     <li className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
       <span aria-hidden="true" className={`size-3 shrink-0 rounded-full ${swatchClass(product.code)}`} />

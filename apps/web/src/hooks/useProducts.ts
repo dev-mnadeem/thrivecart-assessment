@@ -3,9 +3,7 @@ import { fetchProducts, isAbortError } from '../lib/api';
 import type { Product } from '../types/api';
 
 export type ProductsState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; products: Product[] };
+  { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; products: Product[] };
 
 export function useProducts(): ProductsState & { retry: () => void } {
   const [state, setState] = useState<ProductsState>({ status: 'loading' });

@@ -17,9 +17,7 @@ final readonly class QuoteRequestParser
 {
     private const int MAX_CODE_LENGTH = 32;
 
-    public function __construct(private int $maxItems = 100)
-    {
-    }
+    public function __construct(private int $maxItems = 100) {}
 
     /**
      * @return list<string>

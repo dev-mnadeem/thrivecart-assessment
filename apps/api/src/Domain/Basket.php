@@ -56,7 +56,7 @@ final class Basket
 
     public function breakdown(): BasketTotals
     {
-        $subtotalCents = array_sum(array_map(static fn (Product $product): int => $product->priceCents, $this->items));
+        $subtotalCents = array_sum(array_map(static fn(Product $product): int => $product->priceCents, $this->items));
 
         $appliedOffers = [];
         $discountCents = 0;
@@ -88,7 +88,7 @@ final class Basket
         $lines = [];
 
         foreach ($this->items as $product) {
-            $quantity = ($lines[$product->code] ?? null)?->quantity ?? 0;
+            $quantity = isset($lines[$product->code]) ? $lines[$product->code]->quantity : 0;
             $lines[$product->code] = new BasketLine($product, $quantity + 1);
         }
 

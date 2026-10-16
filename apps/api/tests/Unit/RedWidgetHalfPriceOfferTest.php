@@ -72,5 +72,4 @@ final class RedWidgetHalfPriceOfferTest extends TestCase
 
         self::assertSame(1648, (new RedWidgetHalfPriceOffer())->discountCents($items));
     }
-
 }

@@ -21,7 +21,10 @@ export function ProductList({ state, onRetry, quantityOf, onAdd }: ProductListPr
         </p>
         <ul className={grid} aria-hidden="true">
           {[0, 1, 2].map((index) => (
-            <li key={index} className="h-60 animate-pulse rounded-2xl border border-slate-200 bg-white motion-reduce:animate-none" />
+            <li
+              key={index}
+              className="h-60 animate-pulse rounded-2xl border border-slate-200 bg-white motion-reduce:animate-none"
+            />
           ))}
         </ul>
       </div>

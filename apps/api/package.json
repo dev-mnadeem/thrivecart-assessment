@@ -5,6 +5,10 @@
   "scripts": {
     "dev": "composer serve",
     "build": "composer lint:syntax",
-    "test": "composer test"
+    "test": "composer test",
+    "lint": "composer validate --strict && composer cs:check",
+    "typecheck": "composer analyse",
+    "format": "composer cs:fix",
+    "format:check": "composer cs:check"
   }
 }

@@ -173,7 +173,7 @@ final class BasketTest extends TestCase
 
     public function testAcceptsAdditionalOffersWithoutChangingTheBasket(): void
     {
-        $greenOneOff = new class () implements OfferInterface {
+        $greenOneOff = new class implements OfferInterface {
             public function label(): string
             {
                 return '$1 off each green widget';
@@ -181,7 +181,7 @@ final class BasketTest extends TestCase
 
             public function discountCents(array $items): int
             {
-                return 100 * count(array_filter($items, static fn (Product $p): bool => $p->code === 'G01'));
+                return 100 * count(array_filter($items, static fn(Product $p): bool => $p->code === 'G01'));
             }
         };
 
@@ -205,7 +205,7 @@ final class BasketTest extends TestCase
 
     public function testDiscountNeverExceedsSubtotal(): void
     {
-        $generous = new class () implements OfferInterface {
+        $generous = new class implements OfferInterface {
             public function label(): string
             {
                 return 'Too generous';

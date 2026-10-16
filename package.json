@@ -15,7 +15,7 @@
     "typecheck": "turbo run typecheck",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
-    "check": "turbo run format:check lint typecheck test build"
+    "check": "turbo run lint typecheck test build"
   },
   "devDependencies": {
     "turbo": "2.11.8"

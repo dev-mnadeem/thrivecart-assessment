@@ -9,7 +9,8 @@ declare(strict_types=1);
  * syntax errors without relying on shell globbing.
  */
 
-$directories = array_slice($argv, 1);
+$arguments = $_SERVER['argv'] ?? [];
+$directories = is_array($arguments) ? array_filter(array_slice($arguments, 1), is_string(...)) : [];
 $failures = 0;
 $checked = 0;
 

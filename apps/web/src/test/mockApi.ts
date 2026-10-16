@@ -34,7 +34,7 @@ export function mockApi(options: MockApiOptions = {}) {
     }
 
     if (url === '/api/basket/quote') {
-      const { items } = JSON.parse(String(init?.body)) as { items: string[] };
+      const { items } = JSON.parse(typeof init?.body === 'string' ? init.body : '{}') as { items: string[] };
       const custom = options.quoteResponse?.(items);
 
       if (custom) {

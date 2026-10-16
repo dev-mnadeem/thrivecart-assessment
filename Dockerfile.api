@@ -4,6 +4,7 @@ COPY apps/api/ ./
 RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts --no-plugins --classmap-authoritative
 FROM php:8.3-fpm-alpine
 WORKDIR /app
+RUN echo 'expose_php = Off' > /usr/local/etc/php/conf.d/zz-production.ini
 COPY --from=vendor --chown=www-data:www-data /app/vendor ./vendor
 COPY --chown=www-data:www-data apps/api/src ./src
 COPY --chown=www-data:www-data apps/api/public ./public

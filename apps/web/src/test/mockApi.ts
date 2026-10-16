@@ -43,9 +43,8 @@ export function mockApi(options: MockApiOptions = {}) {
 
       const quote = quotes[items.join(',')];
 
-      return quote
-        ? json(quote)
-        : json({ error: { code: 'TEST_MISSING_FIXTURE', message: `No fixture for ${items.join(',')}` } }, 500);
+      // Baskets without a fixture stay pending; the next basket change aborts them.
+      return abortable(quote ? Promise.resolve(json(quote)) : new Promise<Response>(() => undefined), init?.signal);
     }
 
     return json({ error: { code: 'NOT_FOUND', message: 'Not found' } }, 404);

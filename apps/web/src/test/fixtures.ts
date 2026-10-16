@@ -47,4 +47,28 @@ export const quotes: Record<string, Quote> = {
     deliveryCents: 495,
     totalCents: 3785,
   },
+  'R01,G01': {
+    items: [
+      { code: 'R01', name: 'Red Widget', unitPriceCents: 3295, quantity: 1, lineSubtotalCents: 3295 },
+      { code: 'G01', name: 'Green Widget', unitPriceCents: 2495, quantity: 1, lineSubtotalCents: 2495 },
+    ],
+    appliedOffers: [],
+    subtotalCents: 5790,
+    discountCents: 0,
+    discountedSubtotalCents: 5790,
+    deliveryCents: 295,
+    totalCents: 6085,
+  },
+  'B01,B01,R01,R01,R01': {
+    items: [
+      { code: 'B01', name: 'Blue Widget', unitPriceCents: 795, quantity: 2, lineSubtotalCents: 1590 },
+      { code: 'R01', name: 'Red Widget', unitPriceCents: 3295, quantity: 3, lineSubtotalCents: 9885 },
+    ],
+    appliedOffers: [{ label: 'Red Widget: buy one, get the second half price', discountCents: 1648 }],
+    subtotalCents: 11475,
+    discountCents: 1648,
+    discountedSubtotalCents: 9827,
+    deliveryCents: 0,
+    totalCents: 9827,
+  },
 };

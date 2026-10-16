@@ -1,9 +1,21 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import App from './App';
 import { quotes } from './test/fixtures';
 import { json, mockApi } from './test/mockApi';
+
+async function renderApp() {
+  const user = userEvent.setup();
+  render(<App />);
+  await screen.findByRole('button', { name: 'Add Red Widget to basket' });
+
+  return user;
+}
+
+function basket() {
+  return within(screen.getByRole('region', { name: /basket/i }));
+}
 
 describe('App', () => {
   it('lists products with prices from the API', async () => {
@@ -11,32 +23,107 @@ describe('App', () => {
     render(<App />);
 
     expect(screen.getByText('Loading products…')).toBeInTheDocument();
-    expect(await screen.findByText(/Red Widget \(R01\) — \$32\.95/)).toBeInTheDocument();
-    expect(screen.getByText(/Blue Widget \(B01\) — \$7\.95/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Red Widget' })).toBeInTheDocument();
+    expect(screen.getByText('$32.95')).toBeInTheDocument();
+    expect(screen.getByText('$24.95')).toBeInTheDocument();
+    expect(screen.getByText('$7.95')).toBeInTheDocument();
   });
 
-  it('shows the server-calculated total after adding products', async () => {
-    const fetchMock = mockApi();
-    const user = userEvent.setup();
-    render(<App />);
+  it('starts with an empty basket', async () => {
+    mockApi();
+    await renderApp();
 
-    await user.click(await screen.findByRole('button', { name: 'Add Red Widget to basket' }));
-    expect(await screen.findByTestId('basket-total')).toHaveTextContent('$37.90');
+    expect(basket().getByText(/your basket is empty/i)).toBeInTheDocument();
+    expect(basket().queryByTestId('basket-total')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [['B01', 'G01'], '$37.85'],
+    [['R01', 'R01'], '$54.37'],
+    [['R01', 'G01'], '$60.85'],
+    [['B01', 'B01', 'R01', 'R01', 'R01'], '$98.27'],
+  ])('prices the assessment basket %j at %s', async (codes, expectedTotal) => {
+    const names: Record<string, string> = { R01: 'Red Widget', G01: 'Green Widget', B01: 'Blue Widget' };
+    mockApi();
+    const user = await renderApp();
+
+    for (const code of codes) {
+      await user.click(screen.getByRole('button', { name: `Add ${names[code]} to basket` }));
+    }
+
+    await waitFor(() => expect(basket().getByTestId('basket-total')).toHaveTextContent(expectedTotal));
+  });
+
+  it('shows the red widget saving and discounted delivery', async () => {
+    mockApi();
+    const user = await renderApp();
 
     await user.click(screen.getByRole('button', { name: 'Add Red Widget to basket' }));
-    await waitFor(() => expect(screen.getByTestId('basket-total')).toHaveTextContent('$54.37'));
+    await user.click(screen.getByRole('button', { name: 'Add Red Widget to basket' }));
 
-    expect(fetchMock).toHaveBeenLastCalledWith(
-      '/api/basket/quote',
-      expect.objectContaining({ body: JSON.stringify({ items: ['R01', 'R01'] }) }),
-    );
+    await waitFor(() => expect(basket().getByTestId('basket-total')).toHaveTextContent('$54.37'));
+    expect(basket().getByTestId('subtotal')).toHaveTextContent('$65.90');
+    expect(basket().getByText('Red Widget: buy one, get the second half price')).toBeInTheDocument();
+    expect(basket().getByText('−$16.48')).toBeInTheDocument();
+    expect(basket().getByTestId('delivery')).toHaveTextContent('$4.95');
+  });
+
+  it('shows free delivery when the API charges none', async () => {
+    mockApi();
+    const user = await renderApp();
+
+    for (const name of ['Blue Widget', 'Blue Widget', 'Red Widget', 'Red Widget', 'Red Widget']) {
+      await user.click(screen.getByRole('button', { name: `Add ${name} to basket` }));
+    }
+
+    await waitFor(() => expect(basket().getByTestId('delivery')).toHaveTextContent('Free'));
+  });
+
+  it('increments, decrements and removes basket lines', async () => {
+    mockApi();
+    const user = await renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Add Red Widget to basket' }));
+    await user.click(await basket().findByRole('button', { name: 'Add one Red Widget' }));
+
+    await waitFor(() => expect(basket().getByTestId('basket-total')).toHaveTextContent('$54.37'));
+    expect(screen.getByText('2 in basket')).toBeInTheDocument();
+
+    await user.click(basket().getByRole('button', { name: 'Remove one Red Widget' }));
+    await waitFor(() => expect(basket().getByTestId('basket-total')).toHaveTextContent('$37.90'));
+
+    await user.click(basket().getByRole('button', { name: 'Remove all Red Widget from basket' }));
+    expect(basket().getByText(/your basket is empty/i)).toBeInTheDocument();
+  });
+
+  it('removes a line when its quantity is decremented to zero', async () => {
+    mockApi();
+    const user = await renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Add Blue Widget to basket' }));
+    await user.click(await basket().findByRole('button', { name: 'Remove one Blue Widget' }));
+
+    expect(basket().getByText(/your basket is empty/i)).toBeInTheDocument();
+  });
+
+  it('empties the basket', async () => {
+    mockApi();
+    const user = await renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Add Blue Widget to basket' }));
+    await user.click(screen.getByRole('button', { name: 'Add Green Widget to basket' }));
+    await user.click(basket().getByRole('button', { name: 'Empty basket' }));
+
+    expect(basket().getByText(/your basket is empty/i)).toBeInTheDocument();
   });
 
   it('offers a retry when products fail to load', async () => {
     let failing = true;
     mockApi({
       productsResponse: () =>
-        failing ? Promise.resolve(json({ error: { code: 'INTERNAL_ERROR', message: 'Something went wrong.' } }, 500)) : undefined,
+        failing
+          ? Promise.resolve(json({ error: { code: 'INTERNAL_ERROR', message: 'Something went wrong.' } }, 500))
+          : undefined,
     });
     const user = userEvent.setup();
     render(<App />);
@@ -46,7 +133,7 @@ describe('App', () => {
     failing = false;
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
-    expect(await screen.findByText(/Green Widget \(G01\)/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Green Widget' })).toBeInTheDocument();
   });
 
   it('ignores a stale quote that resolves after a newer one', async () => {
@@ -56,19 +143,18 @@ describe('App', () => {
     });
 
     mockApi({ quoteResponse: (items) => (items.length === 1 ? firstQuote : undefined) });
-    const user = userEvent.setup();
-    render(<App />);
+    const user = await renderApp();
 
-    const addRed = await screen.findByRole('button', { name: 'Add Red Widget to basket' });
+    const addRed = screen.getByRole('button', { name: 'Add Red Widget to basket' });
     await user.click(addRed);
     await user.click(addRed);
 
-    await waitFor(() => expect(screen.getByTestId('basket-total')).toHaveTextContent('$54.37'));
+    await waitFor(() => expect(basket().getByTestId('basket-total')).toHaveTextContent('$54.37'));
 
     // The first (one red) request now resolves late; it must not replace the newer total.
     releaseFirst(json(quotes.R01));
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(screen.getByTestId('basket-total')).toHaveTextContent('$54.37');
+    expect(basket().getByTestId('basket-total')).toHaveTextContent('$54.37');
   });
 });

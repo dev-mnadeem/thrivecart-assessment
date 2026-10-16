@@ -1,0 +1,33 @@
+{
+    "name": "acme/basket-api",
+    "description": "Acme Widget Co basket pricing API.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.3",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Acme\\Basket\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Acme\\Basket\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.3.0"
+        },
+        "sort-packages": true
+    },
+    "scripts": {
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php -S 127.0.0.1:8000 -t public public/index.php"
+        ],
+        "lint:syntax": "@php bin/check-syntax.php src public bin"
+    }
+}

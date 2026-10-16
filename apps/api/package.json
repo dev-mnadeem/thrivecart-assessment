@@ -1,0 +1,14 @@
+{
+  "name": "@acme/api",
+  "private": true,
+  "description": "Turborepo task wrappers for the Composer-managed PHP API. Requires PHP 8.3+ and Composer on PATH.",
+  "scripts": {
+    "dev": "composer serve",
+    "build": "composer lint:syntax",
+    "test": "composer test",
+    "lint": "composer validate --strict && composer cs:check",
+    "typecheck": "composer analyse",
+    "format": "composer cs:fix",
+    "format:check": "composer cs:check"
+  }
+}

@@ -1,4 +1,4 @@
-import { ShoppingBasket } from 'lucide-react';
+import { LoaderCircle, PackageOpen, ShoppingBasket } from 'lucide-react';
 import type { BasketState } from '../hooks/useBasket';
 import type { Product } from '../types/api';
 import { BasketLineItem } from './BasketLineItem';
@@ -12,26 +12,39 @@ interface BasketPanelProps {
 
 export function BasketPanel({ basket, products }: BasketPanelProps) {
   const { entries, quote, quoteStatus, quoteError } = basket;
+  const isUpdating = quoteStatus === 'loading';
 
   return (
-    <section aria-labelledby="basket-heading" className="rounded-xl border border-slate-200 bg-white p-5">
-      <div className="flex items-center justify-between">
+    <section
+      id="basket"
+      aria-labelledby="basket-heading"
+      className="self-start rounded-2xl border border-slate-200 bg-white p-5 shadow-sm scroll-mt-4 lg:sticky lg:top-6"
+    >
+      <div className="flex items-center justify-between gap-3">
         <h2 id="basket-heading" className="flex items-center gap-2 text-lg font-semibold">
-          <ShoppingBasket aria-hidden="true" className="size-5" />
+          <ShoppingBasket aria-hidden="true" className="size-5 text-indigo-600" />
           Basket
           <span className="text-sm font-normal text-slate-500">
             ({basket.itemCount} {basket.itemCount === 1 ? 'item' : 'items'})
           </span>
         </h2>
         {entries.length > 0 && (
-          <button type="button" onClick={basket.clear} className="text-sm text-slate-600 underline-offset-2 hover:underline">
+          <button
+            type="button"
+            onClick={basket.clear}
+            className="rounded text-sm text-slate-600 underline-offset-2 hover:text-slate-900 hover:underline"
+          >
             Empty basket
           </button>
         )}
       </div>
 
       {entries.length === 0 ? (
-        <p className="mt-6 text-center text-slate-500">Your basket is empty. Add a widget to get started.</p>
+        <div className="flex flex-col items-center py-10 text-center">
+          <PackageOpen aria-hidden="true" className="size-10 text-slate-300" />
+          <p className="mt-3 font-medium">Your basket is empty.</p>
+          <p className="mt-1 text-sm text-slate-500">Add a widget to see your total.</p>
+        </div>
       ) : (
         <>
           <ul className="mt-2 divide-y divide-slate-100">
@@ -60,17 +73,18 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
             })}
           </ul>
 
-          <div className="mt-4 border-t border-slate-200 pt-4">
+          <div className="mt-2 border-t border-slate-200 pt-4">
             {quoteStatus === 'error' && quoteError ? (
               <ErrorNotice message={quoteError} onRetry={basket.retryQuote} retryLabel="Retry pricing" />
             ) : quote ? (
-              <div aria-busy={quoteStatus === 'loading'} className={quoteStatus === 'loading' ? 'opacity-60' : undefined}>
+              <div aria-busy={isUpdating} className={isUpdating ? 'opacity-60 transition-opacity' : undefined}>
                 <PriceSummary quote={quote} />
               </div>
             ) : null}
 
-            {quoteStatus === 'loading' && (
-              <p role="status" className="mt-2 text-sm text-slate-500">
+            {isUpdating && (
+              <p role="status" className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+                <LoaderCircle aria-hidden="true" className="size-4 animate-spin motion-reduce:animate-none" />
                 Updating total…
               </p>
             )}

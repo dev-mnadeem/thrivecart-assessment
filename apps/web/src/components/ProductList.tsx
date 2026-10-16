@@ -10,12 +10,21 @@ interface ProductListProps {
   onAdd: (code: ProductCode) => void;
 }
 
+const grid = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3';
+
 export function ProductList({ state, onRetry, quantityOf, onAdd }: ProductListProps) {
   if (state.status === 'loading') {
     return (
-      <p role="status" className="text-slate-500">
-        Loading products…
-      </p>
+      <div aria-busy="true">
+        <p role="status" className="sr-only">
+          Loading products…
+        </p>
+        <ul className={grid} aria-hidden="true">
+          {[0, 1, 2].map((index) => (
+            <li key={index} className="h-60 animate-pulse rounded-2xl border border-slate-200 bg-white motion-reduce:animate-none" />
+          ))}
+        </ul>
+      </div>
     );
   }
 
@@ -28,7 +37,7 @@ export function ProductList({ state, onRetry, quantityOf, onAdd }: ProductListPr
   }
 
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className={grid}>
       {state.products.map((product) => (
         <ProductCard
           key={product.code}

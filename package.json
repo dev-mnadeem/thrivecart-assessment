@@ -1,0 +1,23 @@
+{
+  "name": "acme-widget-basket",
+  "private": true,
+  "description": "Acme Widget Co basket proof of concept: React/TypeScript frontend and PHP pricing API in a Turborepo monorepo.",
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=20.19.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "format": "turbo run format",
+    "format:check": "turbo run format:check",
+    "check": "turbo run format:check lint typecheck test build"
+  },
+  "devDependencies": {
+    "turbo": "2.11.8"
+  }
+}

@@ -28,6 +28,10 @@
             "Composer\\Config::disableProcessTimeout",
             "@php -S 127.0.0.1:8000 -t public public/index.php"
         ],
-        "lint:syntax": "@php bin/check-syntax.php src public bin"
+        "lint:syntax": "@php bin/check-syntax.php src public bin",
+        "test": "phpunit"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.5"
     }
 }

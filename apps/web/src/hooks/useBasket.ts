@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchQuote, isAbortError, isRetryable } from '../lib/api';
+import { addUnit, removeLine, removeUnit, toItemCodes, type BasketEntry } from '../lib/basketEntries';
 import type { ProductCode, Quote } from '../types/api';
 
-export interface BasketEntry {
-  code: ProductCode;
-  quantity: number;
-}
+export type { BasketEntry };
 
 export type QuoteStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -49,10 +47,7 @@ export function useBasket(maxItems?: number): BasketState {
   const [result, setResult] = useState<QuoteResult | null>(null);
   const [attempt, setAttempt] = useState(0);
 
-  const items = useMemo(
-    () => entries.flatMap((entry) => Array<ProductCode>(entry.quantity).fill(entry.code)),
-    [entries],
-  );
+  const items = useMemo(() => toItemCodes(entries), [entries]);
   const requestKey = `${items.join(',')}#${attempt}`;
 
   useEffect(() => {
@@ -80,47 +75,18 @@ export function useBasket(maxItems?: number): BasketState {
     return () => controller.abort();
   }, [items, requestKey]);
 
-  const update = useCallback((next: BasketEntry[]) => {
-    setEntries(next);
-
-    if (next.length === 0) {
-      setLastQuote(null);
-    }
-  }, []);
+  // Adjusting state during render (not in an effect) so an emptied basket never shows its old quote.
+  if (items.length === 0 && lastQuote !== null) {
+    setLastQuote(null);
+  }
 
   const isFull = maxItems !== undefined && items.length >= maxItems;
 
-  const add = useCallback(
-    (code: ProductCode) => {
-      if (isFull) {
-        return;
-      }
-
-      update(
-        entries.some((entry) => entry.code === code)
-          ? entries.map((entry) => (entry.code === code ? { ...entry, quantity: entry.quantity + 1 } : entry))
-          : [...entries, { code, quantity: 1 }],
-      );
-    },
-    [entries, isFull, update],
-  );
-
-  const decrement = useCallback(
-    (code: ProductCode) =>
-      update(
-        entries
-          .map((entry) => (entry.code === code ? { ...entry, quantity: entry.quantity - 1 } : entry))
-          .filter((entry) => entry.quantity > 0),
-      ),
-    [entries, update],
-  );
-
-  const remove = useCallback(
-    (code: ProductCode) => update(entries.filter((entry) => entry.code !== code)),
-    [entries, update],
-  );
-
-  const clear = useCallback(() => update([]), [update]);
+  // Functional updates, so several changes in one batch all apply.
+  const add = useCallback((code: ProductCode) => setEntries((current) => addUnit(current, code, maxItems)), [maxItems]);
+  const decrement = useCallback((code: ProductCode) => setEntries((current) => removeUnit(current, code)), []);
+  const remove = useCallback((code: ProductCode) => setEntries((current) => removeLine(current, code)), []);
+  const clear = useCallback(() => setEntries([]), []);
 
   const retryQuote = useCallback(() => setAttempt((value) => value + 1), []);
 

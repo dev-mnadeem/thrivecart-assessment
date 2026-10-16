@@ -45,6 +45,48 @@ describe('useBasket', () => {
     });
   });
 
+  it('applies every change made in a single batch', () => {
+    mockApi();
+    const { result } = renderHook(() => useBasket(3));
+
+    act(() => {
+      result.current.add('R01');
+      result.current.add('R01');
+      result.current.add('B01');
+      result.current.add('G01');
+      result.current.decrement('R01');
+    });
+
+    expect(result.current.entries).toEqual([
+      { code: 'R01', quantity: 1 },
+      { code: 'B01', quantity: 1 },
+    ]);
+  });
+
+  it('does not show the previous basket quote after emptying and refilling', async () => {
+    mockApi();
+    const { result } = renderHook(() => useBasket());
+
+    act(() => {
+      result.current.add('B01');
+    });
+    await waitFor(() => {
+      expect(result.current.quoteStatus).toBe('ready');
+    });
+
+    act(() => {
+      result.current.clear();
+    });
+    act(() => {
+      result.current.add('R01');
+      result.current.add('R01');
+      result.current.add('R01');
+    });
+
+    expect(result.current.quoteStatus).toBe('loading');
+    expect(result.current.quote).toBeNull();
+  });
+
   it('reports loading, then the server quote', async () => {
     mockApi();
     const { result } = renderHook(() => useBasket());

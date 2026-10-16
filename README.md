@@ -1,34 +1,42 @@
-# Acme Widget Co — Basket Proof of Concept
+# Acme Widget Co — Basket
 
-A shopping basket for Acme Widget Co: a PHP pricing API and a React + TypeScript storefront, in one monorepo.
+A proof-of-concept shopping basket for Acme Widget Co. A PHP pricing API owns every rule (catalogue, the red-widget half-price offer, tiered delivery), and a React + TypeScript storefront lets you build a basket and shows the server's price breakdown as you go.
 
-- **`apps/api`** — PHP 8.3+ domain model (`Basket`, catalogue, offers, delivery rules) behind a tiny stateless JSON API. Managed with **Composer**.
-- **`apps/web`** — React 19 + TypeScript + Vite + Tailwind CSS single-page basket. Managed with **pnpm**.
-- **Turborepo** runs `dev`, `lint`, `typecheck`, `test` and `build` across both apps. The PHP app has a small `package.json` whose scripts call `composer`, so Turbo can orchestrate it without pnpm ever installing PHP dependencies.
+It answers the ThriveCart take-home brief in [`docs/ThriveCart-Assessment.md`](docs/ThriveCart-Assessment.md): a `Basket` class with `add()` and `total()` that reproduces the four expected totals exactly, plus a small UI on top.
 
-The original brief is in [`docs/ThriveCart-Assessment.md`](docs/ThriveCart-Assessment.md).
+![Storefront with two red widgets and a blue widget, priced at $60.32 by the PHP API](docs/screenshots/basket.png)
 
-![Basket priced by the running PHP API](docs/screenshots/basket.png)
+- **`apps/api`**: PHP 8.3 domain model (`Basket`, `Catalogue`, offers, delivery rules) behind a stateless JSON API with no framework. Composer, PHPUnit, PHPStan (level `max`) and PHP-CS-Fixer.
+- **`apps/web`**: React 19, TypeScript, Vite and Tailwind CSS 4. Vitest and React Testing Library.
+- **Turborepo + pnpm** run `dev`, `lint`, `typecheck`, `test` and `build` across both apps. The PHP app has a small `package.json` whose scripts call `composer`, so Turbo can orchestrate it without pnpm ever installing PHP dependencies.
 
-## Requirements
+## Quick start with Docker
 
-| Tool     | Version                         | Notes                                     |
-| -------- | ------------------------------- | ----------------------------------------- |
-| Node.js  | 22.12+ (pinned `22.20.0` in `.nvmrc`) | `nvm use` picks up `.nvmrc`         |
-| pnpm     | 10 (pinned `pnpm@10.15.1` via `packageManager`) | `corepack enable` installs it |
-| PHP      | 8.3+ with `ext-json`            | Must be installed locally and on `PATH`   |
-| Composer | 2.x                             | Must be installed locally and on `PATH`   |
-
-No database or secrets are needed for local development. Docker is optional.
-
-## Getting started
+The quickest way to see it running needs only Docker:
 
 ```bash
-git clone <repository-url> acme-widget-basket
-cd acme-widget-basket
+docker compose up --build
+```
 
-nvm use                      # Node 22.20.0 from .nvmrc
-corepack enable              # pnpm 10.15.1 from package.json
+Open http://localhost:5173. Compose builds two images:
+
+- **`api`** (`Dockerfile.api`): Composer installs production dependencies, then the code runs on `php:8.3-fpm-alpine` as `www-data` with a read-only root filesystem.
+- **`web`** (`Dockerfile.web`): pnpm builds the Vite bundle on Node 22, and unprivileged nginx serves it. nginx forwards `/api/` to PHP-FPM over FastCGI, so the browser talks to one origin.
+
+No secrets, database or provider keys are involved. Stop with `docker compose down --rmi local`.
+
+## Local development
+
+| Tool     | Version                                           | Notes                                   |
+| -------- | ------------------------------------------------- | --------------------------------------- |
+| Node.js  | 22.22.2+ (pinned `22.23.4` in `.nvmrc`)           | `nvm use` picks up `.nvmrc`             |
+| pnpm     | 10 (pinned `pnpm@10.34.9` via `packageManager`)   | `corepack enable` installs it           |
+| PHP      | 8.3+ with `ext-json`                              | Must be on `PATH`                       |
+| Composer | 2.x                                               | Must be on `PATH`                       |
+
+```bash
+nvm use                      # Node 22.23.4 from .nvmrc
+corepack enable              # pnpm 10.34.9 from package.json
 pnpm install
 (cd apps/api && composer install)
 
@@ -37,32 +45,84 @@ pnpm dev
 
 `pnpm dev` starts both apps:
 
-| App                 | URL                     |
-| ------------------- | ----------------------- |
-| Web (Vite)          | http://localhost:5173   |
+| App                       | URL                   |
+| ------------------------- | --------------------- |
+| Web (Vite)                | http://localhost:5173 |
 | API (PHP built-in server) | http://127.0.0.1:8000 |
 
-The Vite dev server proxies `/api/*` to the PHP server, so the browser only talks to one origin and no CORS configuration is needed. To point the proxy elsewhere, copy `.env.example` to `apps/web/.env.local` and change `API_PROXY_TARGET`.
+The Vite dev server proxies `/api/*` to the PHP server, so no CORS configuration is needed. To point the proxy elsewhere, copy `.env.example` to `apps/web/.env.local` and change `API_PROXY_TARGET`.
 
-## Commands
+### Commands
 
 All commands run from the repository root and fan out through Turborepo.
 
-| Command          | Web (`apps/web`)                         | API (`apps/api`)                                  |
-| ---------------- | ---------------------------------------- | ------------------------------------------------- |
-| `pnpm dev`       | Vite dev server                          | `php -S 127.0.0.1:8000 -t public public/index.php` |
-| `pnpm lint`      | ESLint (type-aware) + Prettier check     | `composer validate --strict` + PHP-CS-Fixer check |
-| `pnpm typecheck` | `tsc --noEmit` (strict)                  | PHPStan at level `max`                            |
-| `pnpm test`      | Vitest + React Testing Library           | PHPUnit (unit + API integration suites)           |
-| `pnpm build`     | `tsc` + `vite build` → `apps/web/dist`   | `php -l` syntax check of every PHP file           |
-| `pnpm format`    | Prettier write                           | PHP-CS-Fixer fix                                  |
-| `pnpm check`     | lint → typecheck → test → build for both apps |                                              |
+| Command          | Web (`apps/web`)                              | API (`apps/api`)                                   |
+| ---------------- | --------------------------------------------- | -------------------------------------------------- |
+| `pnpm dev`       | Vite dev server                               | `php -S 127.0.0.1:8000 -t public public/index.php` |
+| `pnpm lint`      | ESLint (type-aware) + Prettier check          | `composer validate --strict` + PHP-CS-Fixer check  |
+| `pnpm typecheck` | `tsc --noEmit` (strict)                       | PHPStan at level `max`                             |
+| `pnpm test`      | Vitest + React Testing Library (61 tests)     | PHPUnit unit + API integration suites (106 tests)  |
+| `pnpm build`     | `tsc` + `vite build` → `apps/web/dist`        | `php -l` syntax check of every PHP file            |
+| `pnpm format`    | Prettier write                                | PHP-CS-Fixer fix                                   |
+| `pnpm check`     | lint, typecheck, test and build for both apps |                                                    |
 
-PHP has no compile step, so the API's `build` is a syntax check. That gives `pnpm build` a fast way to catch broken PHP.
+PHP has no compile step, so the API's `build` is a syntax check. That gives `pnpm build` a fast way to catch broken PHP. PHP-CS-Fixer uses the `@PER-CS2.0` ruleset, the successor to PSR-12.
 
-**Formatter choice:** PHP-CS-Fixer with the `@PER-CS2.0` ruleset (the successor to PSR-12). It is configurable and runs without Laravel; Pint would work equally well.
+## Architecture
 
-CI (`.github/workflows/ci.yml`) installs Node from `.nvmrc`, pnpm, PHP 8.3 (the minimum supported version) and Composer, then runs `pnpm check`. It needs no secrets.
+```mermaid
+flowchart LR
+  subgraph Browser
+    UI["React storefront<br/>useProducts / useBasket"]
+  end
+  subgraph web["web: nginx or Vite dev proxy"]
+    Static["Static bundle"]
+    Proxy["/api/* proxy"]
+  end
+  subgraph api["api: PHP-FPM or php -S"]
+    Front["public/index.php<br/>composition root"]
+    App["Application<br/>routing, validation, errors"]
+    Domain["Domain<br/>Basket, Catalogue, offers, DeliveryRules"]
+    Config["DefaultPricing"]
+  end
+  UI -->|GET /| Static
+  UI -->|GET /api/products<br/>POST /api/basket/quote| Proxy
+  Proxy --> Front --> App --> Domain
+  Config --> Front
+```
+
+Every basket change is priced by the server:
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Basket as React basket
+  participant API as PHP quote API
+  participant Rules as Domain pricing rules
+  User->>Basket: Add or remove a product
+  Basket->>API: POST /api/basket/quote (product codes)
+  API->>Rules: Validate catalogue and apply offers/delivery
+  Rules-->>API: Integer-cent totals
+  API-->>Basket: Itemized quote
+  Basket->>Basket: Ignore stale responses
+```
+
+```text
+apps/
+├── api/                        Composer project (PSR-4: Acme\Basket\ → src/)
+│   ├── public/index.php        Front controller + composition root
+│   ├── src/Config/             DefaultPricing: products, delivery tiers, offers
+│   ├── src/Domain/             Framework-free pricing model
+│   ├── src/Http/               Request, JsonResponse, Application (router), QuoteRequestParser
+│   ├── tests/Unit/             Domain and HTTP value-object tests
+│   └── tests/Integration/      In-process HTTP tests against Application::handle()
+└── web/src/
+    ├── components/             ProductList, ProductCard, BasketPanel, PriceSummary, WidgetSwatch, …
+    ├── hooks/                  useProducts, useBasket
+    ├── lib/                    Typed API client, basket entry helpers, money formatting
+    └── test/                   Fixtures and an in-memory fetch mock of the API
+docker/nginx.conf, Dockerfile.api, Dockerfile.web, docker-compose.yml
+```
 
 ## How pricing works
 
@@ -154,12 +214,14 @@ Other kinds of offer implement `OfferInterface`, which has `label()` and `discou
 
 ## API
 
+The responses below were captured from the Docker Compose stack (port 5173, proxied by nginx). With `pnpm dev` the PHP server answers directly on port 8000 with the same bodies.
+
 The API is stateless: the client sends the product codes in its basket and the server returns an authoritative price breakdown. Client-supplied prices or totals are never trusted; unknown request fields are ignored.
 
 ### `GET /api/products`
 
 ```bash
-curl http://127.0.0.1:8000/api/products
+curl http://localhost:5173/api/products
 ```
 
 ```json
@@ -176,7 +238,7 @@ curl http://127.0.0.1:8000/api/products
 ### `POST /api/basket/quote`
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/basket/quote \
+curl -X POST http://localhost:5173/api/basket/quote \
   -H 'Content-Type: application/json' \
   -d '{"items":["R01","R01","B01"]}'
 ```
@@ -200,14 +262,21 @@ curl -X POST http://127.0.0.1:8000/api/basket/quote \
 
 ### `GET /api/health`
 
-Returns `{ "status": "ok" }`.
+Returns `{"status":"ok"}`.
 
 ### Errors
 
 Every error is JSON in the same shape:
 
-```json
-{ "error": { "code": "INVALID_PRODUCT", "message": "Unknown product code: XYZ" } }
+```bash
+curl -i -X POST http://localhost:5173/api/basket/quote -d '{"items":["XYZ"]}'
+# HTTP/1.1 422
+# {"error":{"code":"INVALID_PRODUCT","message":"Unknown product code: XYZ"}}
+
+curl -i -X DELETE http://localhost:5173/api/products
+# HTTP/1.1 405 Method Not Allowed
+# Allow: GET
+# {"error":{"code":"METHOD_NOT_ALLOWED","message":"DELETE is not supported for /api/products."}}
 ```
 
 | Status | `code`               | When                                                       |
@@ -224,43 +293,15 @@ Every error is JSON in the same shape:
 ## Frontend
 
 - Products and prices come from `GET /api/products`. Nothing about pricing is hard-coded in the UI.
-- The basket (product code → quantity) lives in React state (`useBasket`). After every change, the full list of codes is sent to `POST /api/basket/quote`, and the UI shows the server's subtotal, offers, delivery and total.
-- **Stale responses** can't win. Each basket change aborts the in-flight request with an `AbortController`, and each result is tagged with the basket it priced, so only the quote for the current basket is shown.
-- Loading, error and empty states are covered for both products and quotes. Retry is only offered when it could help: for network failures and 5xx responses. A 4xx means the request itself was rejected, so the UI shows the server's message without a retry button (for a quote, with a hint to adjust the basket). While a new quote loads, the previous totals stay visible but dimmed, so the layout doesn't jump.
-- **Basket limit:** once the basket holds `maxBasketItems` units, the Add and "+" buttons are disabled and the basket says so. Removing an item re-enables them. The API still enforces the limit itself.
-- Accessibility: semantic landmarks and headings, labelled icon buttons, `role="status"` and `role="alert"` messages, visible focus rings, keyboard operation, and `prefers-reduced-motion` support.
-- The layout is responsive: one column on mobile (the header item count links to the basket), and a product grid with a sticky basket on large screens.
+- The basket (product code → quantity) lives in React state (`useBasket`). Changes are pure functions in `lib/basketEntries.ts` applied as functional state updates, so several changes in one render batch all land. After every change the full list of codes goes to `POST /api/basket/quote`, and the UI shows the server's subtotal, offers, delivery and total.
+- **Stale responses can't win.** Each basket change aborts the in-flight request with an `AbortController`, and each result is tagged with the basket it priced, so only the quote for the current basket is shown.
+- Loading, error and empty states cover both products and quotes. Retry is offered only when it could help: network failures and 5xx responses. A 4xx shows the server's message without a retry button. While a new quote loads, the previous totals stay visible but dimmed, so the layout doesn't jump.
+- **Basket limit:** once the basket holds `maxBasketItems` units, the Add and "+" buttons are disabled and the basket says so. The API still enforces the limit itself.
+- **Look:** the storefront reads like a printed trade price list: warm paper and ink with a safety-orange accent, Archivo (condensed for headings) with IBM Plex Mono for product codes and prices, and products as rows of one sheet rather than a grid of cards.
+- **Accessibility:** semantic landmarks and headings, labelled icon buttons, `role="status"` and `role="alert"` messages, visible focus rings, keyboard operation and `prefers-reduced-motion` support.
+- **Responsive:** one column on phones (the header item count links to the basket); on large screens the price list sits beside a sticky basket.
 
-## Architecture
-
-```text
-.
-├── .github/workflows/ci.yml   # pnpm + Composer install, then `pnpm check`
-├── apps/
-│   ├── api/                   # Composer project (PSR-4: Acme\Basket\ → src/)
-│   │   ├── public/index.php   # Front controller + composition root
-│   │   ├── src/
-│   │   │   ├── Config/DefaultPricing.php   # Products, delivery tiers, offers
-│   │   │   ├── Domain/        # Framework-free pricing model
-│   │   │   │   ├── Basket.php, BasketTotals.php, BasketLine.php, AppliedOffer.php
-│   │   │   │   ├── Product.php, Catalogue.php, UnknownProductException.php
-│   │   │   │   ├── DeliveryRules.php, DeliveryTier.php
-│   │   │   │   └── OfferInterface.php, BuyOneGetOneHalfPriceOffer.php
-│   │   │   └── Http/          # Request, JsonResponse, router (Application), validation
-│   │   ├── tests/Unit/        # Domain tests
-│   │   ├── tests/Integration/ # In-process HTTP tests
-│   │   └── package.json       # Turbo task wrappers around composer
-│   └── web/
-│       └── src/
-│           ├── components/    # ProductList, ProductCard, BasketPanel, PriceSummary, …
-│           ├── hooks/         # useProducts, useBasket
-│           ├── lib/           # Typed API client, money formatting
-│           ├── types/api.ts   # API DTOs
-│           └── test/          # Fixtures and fetch mock
-├── docs/                      # Original assessment brief
-├── package.json, pnpm-workspace.yaml, turbo.json
-└── .nvmrc, .env.example
-```
+![The same basket on a 390px-wide phone](docs/screenshots/basket-mobile.png)
 
 ### Design decisions
 
@@ -275,35 +316,10 @@ Every error is JSON in the same shape:
 - The basket lives in browser memory and is lost on reload. There is no checkout, persistence, authentication or stock.
 - One currency (USD); amounts assume two-decimal cents.
 - Offers are evaluated independently and their discounts summed. Offers that compete for the same items would need an explicit precedence rule.
-- The PHP built-in server is for local development only. Production would sit behind nginx/Apache + PHP-FPM.
+- `pnpm dev` uses the PHP built-in server, which is for local development only. The Compose stack shows the production shape: nginx in front of PHP-FPM.
+- The storefront loads Archivo and IBM Plex Mono from Google Fonts. Offline it falls back to the system font stack.
+- TypeScript stays on 6.0: typescript-eslint 8 does not support TypeScript 7 yet.
 
-## Quote workflow
+## License
 
-```mermaid
-sequenceDiagram
-  participant User
-  participant Basket as React basket
-  participant API as PHP quote API
-  participant Rules as Domain pricing rules
-  User->>Basket: Add or remove a product
-  Basket->>API: POST /api/basket/quote (product codes)
-  API->>Rules: Validate catalogue and apply offers/delivery
-  Rules-->>API: Integer-cent totals
-  API-->>Basket: Itemized quote
-  Basket->>Basket: Ignore stale responses
-```
-
-Native verification used Node 22 and PHP 8.5: 99 PHP tests, 53 frontend tests,
-PHPStan and TypeScript checks passed. An actual browser request for two red widgets
-and one blue widget returned **$60.32**, including the half-price offer and delivery.
-The desktop and [mobile capture](docs/screenshots/basket-mobile.png) show that same
-server-backed quote. This is a pricing demonstration, not a purchase or payment.
-
-### Optional containers
-
-`docker compose up --build` defines a non-root PHP-FPM service and a frontend
-served by nginx at http://localhost:5173. nginx forwards `/api/` to the fixed PHP
-front controller; provider keys and a database are unnecessary. Both images are
-defined in `Dockerfile.api` and `Dockerfile.web`. Container startup has not been
-verified here because the Docker daemon is unavailable; the native setup above was
-exercised instead.
+MIT, see [`LICENSE`](LICENSE).

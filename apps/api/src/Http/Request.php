@@ -16,12 +16,24 @@ final readonly class Request
     {
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $path = is_string($uri) ? parse_url($uri, PHP_URL_PATH) : null;
 
         return new self(
             is_string($method) ? strtoupper($method) : 'GET',
-            is_string($path) ? $path : '/',
+            is_string($uri) ? self::pathOf($uri) : '/',
             (string) file_get_contents('php://input'),
         );
+    }
+
+    /**
+     * Strips the query string from a request target.
+     *
+     * parse_url() is not used because it reads "//api/health" as host "api" and path
+     * "/health", and returns false for some valid paths such as "/a:1".
+     */
+    private static function pathOf(string $requestTarget): string
+    {
+        $path = explode('?', $requestTarget, 2)[0];
+
+        return $path === '' ? '/' : $path;
     }
 }

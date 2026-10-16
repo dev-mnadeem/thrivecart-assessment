@@ -13,36 +13,39 @@ export function PriceSummary({ quote }: PriceSummaryProps) {
     <div className="space-y-4">
       <dl className="space-y-2 text-sm">
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-600">Subtotal</dt>
-          <dd data-testid="subtotal" className="tabular-nums">
+          <dt className="text-muted">Subtotal</dt>
+          <dd data-testid="subtotal" className="font-mono tabular-nums">
             {formatCents(quote.subtotalCents)}
           </dd>
         </div>
 
         {quote.appliedOffers.map((offer) => (
-          <div key={offer.label} className="flex justify-between gap-4 text-emerald-700">
+          <div key={offer.label} className="flex justify-between gap-4 text-green-800">
             <dt>{offer.label}</dt>
-            <dd className="shrink-0 tabular-nums">−{formatCents(offer.discountCents)}</dd>
+            <dd className="shrink-0 font-mono tabular-nums">−{formatCents(offer.discountCents)}</dd>
           </div>
         ))}
 
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-600">Delivery</dt>
-          <dd data-testid="delivery" className={freeDelivery ? 'font-medium text-emerald-700' : 'tabular-nums'}>
+          <dt className="text-muted">Delivery</dt>
+          <dd
+            data-testid="delivery"
+            className={freeDelivery ? 'font-semibold text-green-800' : 'font-mono tabular-nums'}
+          >
             {freeDelivery ? 'Free' : formatCents(quote.deliveryCents)}
           </dd>
         </div>
 
-        <div className="flex justify-between gap-4 border-t border-slate-200 pt-3 text-base font-semibold">
+        <div className="border-ink flex items-baseline justify-between gap-4 border-t-2 pt-3 text-lg font-bold">
           <dt>Total</dt>
-          <dd data-testid="basket-total" className="tabular-nums">
+          <dd data-testid="basket-total" className="font-mono text-2xl font-medium tabular-nums">
             {formatCents(quote.totalCents)}
           </dd>
         </div>
       </dl>
 
       {(quote.discountCents > 0 || freeDelivery) && (
-        <ul className="space-y-1.5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
+        <ul className="space-y-1.5 rounded-lg bg-green-50 p-3 text-sm text-green-900 ring-1 ring-green-700/15 ring-inset">
           {quote.discountCents > 0 && (
             <li className="flex items-center gap-2">
               <Tag aria-hidden="true" className="size-4 shrink-0" />

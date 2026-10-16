@@ -1,21 +1,27 @@
 @import 'tailwindcss';
 
+@theme {
+  --font-sans: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /* Warm paper and ink, like a printed trade price list, with a safety-orange accent. */
+  --color-paper: #f4efe4;
+  --color-card: #fffcf5;
+  --color-ink: #1d1b18;
+  --color-muted: #5a554c;
+  --color-rule: #ddd5c4;
+  --color-signal: #c2410c;
+  --color-signal-dark: #9a3412;
+  --color-signal-soft: #fdebd8;
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
-    font-family:
-      ui-sans-serif,
-      system-ui,
-      -apple-system,
-      'Segoe UI',
-      Roboto,
-      'Helvetica Neue',
-      Arial,
-      sans-serif;
+    @apply bg-paper text-ink font-sans antialiased;
   }
 
   button {
@@ -27,7 +33,11 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-indigo-600);
+    outline: 2px solid var(--color-signal);
     outline-offset: 2px;
   }
+}
+
+@utility font-condensed {
+  font-stretch: 80%;
 }

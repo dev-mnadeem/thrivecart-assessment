@@ -12,7 +12,7 @@ interface ProductListProps {
   canAdd?: boolean;
 }
 
-const grid = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3';
+const sheet = 'divide-y divide-rule overflow-hidden rounded-xl border border-rule bg-card shadow-sm';
 
 export function ProductList({ state, onRetry, quantityOf, onAdd, canAdd = true }: ProductListProps) {
   if (state.status === 'loading') {
@@ -21,12 +21,12 @@ export function ProductList({ state, onRetry, quantityOf, onAdd, canAdd = true }
         <p role="status" className="sr-only">
           Loading products…
         </p>
-        <ul className={grid} aria-hidden="true">
+        <ul className={sheet} aria-hidden="true">
           {[0, 1, 2].map((index) => (
-            <li
-              key={index}
-              className="h-60 animate-pulse rounded-2xl border border-slate-200 bg-white motion-reduce:animate-none"
-            />
+            <li key={index} className="flex items-center gap-4 p-4 sm:px-5">
+              <span className="bg-rule size-12 animate-pulse rounded-xl motion-reduce:animate-none" />
+              <span className="bg-rule h-5 flex-1 animate-pulse rounded motion-reduce:animate-none" />
+            </li>
           ))}
         </ul>
       </div>
@@ -38,11 +38,13 @@ export function ProductList({ state, onRetry, quantityOf, onAdd, canAdd = true }
   }
 
   if (state.products.length === 0) {
-    return <p className="text-slate-500">No products are available right now.</p>;
+    return (
+      <p className="border-rule text-muted rounded-xl border border-dashed p-6">No products are available right now.</p>
+    );
   }
 
   return (
-    <ul className={grid}>
+    <ul className={sheet}>
       {state.products.map((product) => (
         <ProductCard
           key={product.code}

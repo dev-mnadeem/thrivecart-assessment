@@ -18,13 +18,13 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
     <section
       id="basket"
       aria-labelledby="basket-heading"
-      className="scroll-mt-4 self-start rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-6"
+      className="border-rule bg-card scroll-mt-4 self-start rounded-xl border p-5 shadow-sm lg:sticky lg:top-6"
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 id="basket-heading" className="flex items-center gap-2 text-lg font-semibold">
-          <ShoppingBasket aria-hidden="true" className="size-5 text-indigo-600" />
+        <h2 id="basket-heading" className="font-condensed flex items-center gap-2 text-xl font-bold">
+          <ShoppingBasket aria-hidden="true" className="text-signal size-5" />
           Basket
-          <span className="text-sm font-normal text-slate-500">
+          <span className="text-muted font-mono text-sm font-normal">
             ({basket.itemCount} {basket.itemCount === 1 ? 'item' : 'items'})
           </span>
         </h2>
@@ -32,7 +32,7 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
           <button
             type="button"
             onClick={basket.clear}
-            className="rounded text-sm text-slate-600 underline-offset-2 hover:text-slate-900 hover:underline"
+            className="text-muted hover:text-ink rounded text-sm underline-offset-2 hover:underline"
           >
             Empty basket
           </button>
@@ -41,9 +41,9 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
 
       {entries.length === 0 ? (
         <div className="flex flex-col items-center py-10 text-center">
-          <PackageOpen aria-hidden="true" className="size-10 text-slate-300" />
+          <PackageOpen aria-hidden="true" className="text-rule size-10" />
           <p className="mt-3 font-medium">Your basket is empty.</p>
-          <p className="mt-1 text-sm text-slate-500">Add a widget to see your total.</p>
+          <p className="text-muted mt-1 text-sm">Add a widget to see your total.</p>
         </div>
       ) : (
         <>
@@ -53,7 +53,7 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
             </p>
           )}
 
-          <ul className="mt-2 divide-y divide-slate-100">
+          <ul className="divide-rule mt-2 divide-y">
             {entries.map((entry) => {
               const product = products.find((candidate) => candidate.code === entry.code);
 
@@ -80,7 +80,7 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
             })}
           </ul>
 
-          <div className="mt-2 border-t border-slate-200 pt-4">
+          <div className="border-rule mt-2 border-t pt-4">
             {quoteStatus === 'error' && quoteError ? (
               <ErrorNotice
                 message={quoteError}
@@ -95,7 +95,7 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
             ) : null}
 
             {isUpdating && (
-              <p role="status" className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+              <p role="status" className="text-muted mt-3 flex items-center gap-2 text-sm">
                 <LoaderCircle aria-hidden="true" className="size-4 animate-spin motion-reduce:animate-none" />
                 Updating total…
               </p>

@@ -1,7 +1,7 @@
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { formatCents } from '../lib/money';
-import { swatchClass } from '../lib/widgetStyle';
 import type { Product, QuoteLine } from '../types/api';
+import { WidgetSwatch } from './WidgetSwatch';
 
 interface BasketLineItemProps {
   product: Product;
@@ -15,7 +15,7 @@ interface BasketLineItemProps {
 }
 
 const iconButton =
-  'inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent';
+  'inline-flex size-9 items-center justify-center rounded-lg border border-rule text-ink transition-colors hover:bg-paper disabled:opacity-40 disabled:hover:bg-transparent';
 
 export function BasketLineItem({
   product,
@@ -31,15 +31,17 @@ export function BasketLineItem({
     // name, unit price, quantity controls, line price and remove button side by side.
     <li className="py-3">
       <div className="flex items-start gap-3">
-        <span aria-hidden="true" className={`mt-1.5 size-3 shrink-0 rounded-full ${swatchClass(product.code)}`} />
-        <p className="min-w-0 flex-1 font-medium break-words">{product.name}</p>
-        <p className="shrink-0 text-right font-medium tabular-nums">
-          {pricedLine ? formatCents(pricedLine.lineSubtotalCents) : <span className="text-slate-400">…</span>}
+        <span className="mt-0.5">
+          <WidgetSwatch code={product.code} size="sm" />
+        </span>
+        <p className="min-w-0 flex-1 font-semibold break-words">{product.name}</p>
+        <p className="shrink-0 text-right font-mono font-medium tabular-nums">
+          {pricedLine ? formatCents(pricedLine.lineSubtotalCents) : <span className="text-muted">…</span>}
         </p>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pl-6">
-        <p className="min-w-24 text-sm text-slate-500">{formatCents(product.priceCents)} each</p>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pl-8">
+        <p className="text-muted min-w-24 font-mono text-sm">{formatCents(product.priceCents)} each</p>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5" role="group" aria-label={`${product.name} quantity`}>
@@ -51,7 +53,7 @@ export function BasketLineItem({
             >
               <Minus aria-hidden="true" className="size-4" />
             </button>
-            <span className="w-7 text-center font-medium tabular-nums" aria-label={`Quantity ${quantity}`}>
+            <span className="w-7 text-center font-mono font-medium tabular-nums" aria-label={`Quantity ${quantity}`}>
               {quantity}
             </span>
             <button
@@ -69,7 +71,7 @@ export function BasketLineItem({
             type="button"
             onClick={onRemove}
             aria-label={`Remove all ${product.name} from basket`}
-            className={`${iconButton} border-transparent text-slate-500 hover:text-red-700`}
+            className={`${iconButton} text-muted border-transparent hover:text-red-700`}
           >
             <Trash2 aria-hidden="true" className="size-4" />
           </button>

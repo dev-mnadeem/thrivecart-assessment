@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react';
 import { formatCents } from '../lib/money';
-import { swatchClass } from '../lib/widgetStyle';
 import type { Product } from '../types/api';
+import { WidgetSwatch } from './WidgetSwatch';
 
 interface ProductCardProps {
   product: Product;
@@ -10,33 +10,38 @@ interface ProductCardProps {
   onAdd: () => void;
 }
 
+/** One line of the price list: on small screens the price and button wrap under the name. */
 export function ProductCard({ product, quantityInBasket, canAdd, onAdd }: ProductCardProps) {
   return (
-    <li className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <span aria-hidden="true" className={`size-10 rounded-xl ${swatchClass(product.code)}`} />
-        {quantityInBasket > 0 && (
-          <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
-            {quantityInBasket} in basket
-          </span>
-        )}
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-3 p-4 sm:flex-nowrap sm:px-5">
+      <WidgetSwatch code={product.code} size="lg" />
+
+      <div className="min-w-0 flex-1">
+        <h3 className="font-condensed text-lg font-bold">{product.name}</h3>
+        <p className="text-muted flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          <span className="font-mono">Code {product.code}</span>
+          {quantityInBasket > 0 && (
+            <span className="bg-signal-soft text-signal-dark rounded-full px-2 py-0.5 text-xs font-medium">
+              {quantityInBasket} in basket
+            </span>
+          )}
+        </p>
       </div>
 
-      <h3 className="mt-4 font-semibold">{product.name}</h3>
-      <p className="text-sm text-slate-500">Code {product.code}</p>
+      <div className="flex w-full items-center justify-between gap-4 sm:w-auto">
+        <p className="font-mono text-xl font-medium tabular-nums">{formatCents(product.priceCents)}</p>
 
-      <p className="mt-3 text-2xl font-semibold tabular-nums">{formatCents(product.priceCents)}</p>
-
-      <button
-        type="button"
-        onClick={onAdd}
-        disabled={!canAdd}
-        aria-label={`Add ${product.name} to basket`}
-        className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white transition-colors hover:bg-indigo-700 active:bg-indigo-800 disabled:bg-slate-300 disabled:text-slate-600"
-      >
-        <Plus aria-hidden="true" className="size-4" />
-        Add to basket
-      </button>
+        <button
+          type="button"
+          onClick={onAdd}
+          disabled={!canAdd}
+          aria-label={`Add ${product.name} to basket`}
+          className="bg-signal hover:bg-signal-dark active:bg-ink inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white transition-colors disabled:bg-stone-300 disabled:text-stone-600"
+        >
+          <Plus aria-hidden="true" className="size-4" />
+          Add
+        </button>
+      </div>
     </li>
   );
 }

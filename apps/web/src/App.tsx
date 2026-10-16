@@ -10,15 +10,22 @@ export default function App() {
 
   return (
     <>
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-          <p className="text-lg font-semibold tracking-tight">Acme Widget Co</p>
+      <header className="bg-ink text-paper">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+          <p className="font-condensed flex items-center gap-2.5 text-lg font-extrabold tracking-wide uppercase">
+            <span aria-hidden="true" className="flex gap-1">
+              <span className="size-2.5 rounded-full bg-red-500" />
+              <span className="size-2.5 rounded-full bg-green-500" />
+              <span className="size-2.5 rounded-full bg-blue-500" />
+            </span>
+            Acme Widget Co.
+          </p>
           <a
             href="#basket"
-            className="flex items-center gap-2 rounded-lg px-2 py-1 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            className="text-paper/85 hover:text-paper flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm hover:bg-white/10"
           >
             <ShoppingBasket aria-hidden="true" className="size-4" />
-            <span aria-live="polite">
+            <span aria-live="polite" className="font-mono">
               {basket.itemCount} {basket.itemCount === 1 ? 'item' : 'items'}
             </span>
             <span className="sr-only">in basket, go to basket</span>
@@ -26,9 +33,10 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Widgets</h1>
-        <p className="mt-1 text-slate-600">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+        <p className="text-signal font-mono text-xs tracking-widest uppercase">Price list</p>
+        <h1 className="font-condensed mt-1 text-4xl font-extrabold tracking-tight sm:text-5xl">Widgets</h1>
+        <p className="text-muted mt-2 max-w-prose">
           Add widgets to your basket. Offers and delivery are applied automatically.
         </p>
 

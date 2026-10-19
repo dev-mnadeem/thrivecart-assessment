@@ -1,15 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import { json } from '../test/mockApi';
-import { ApiError, fetchProducts, fetchQuote } from './api';
+import { ApiError, fetchProducts, fetchQuote, isRetryable } from './api';
 
 describe('api client', () => {
-  it('fetches products', async () => {
+  it('fetches products and the basket limit', async () => {
+    const body = { products: [{ code: 'B01', name: 'Blue Widget', priceCents: 795 }], maxBasketItems: 100 };
     vi.stubGlobal(
       'fetch',
-      vi.fn(() => Promise.resolve(json({ products: [{ code: 'B01', name: 'Blue Widget', priceCents: 795 }] }))),
+      vi.fn(() => Promise.resolve(json(body))),
     );
 
-    await expect(fetchProducts()).resolves.toEqual([{ code: 'B01', name: 'Blue Widget', priceCents: 795 }]);
+    await expect(fetchProducts()).resolves.toEqual(body);
   });
 
   it('posts product codes for a quote', async () => {
@@ -59,5 +60,16 @@ describe('api client', () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({ code: 'NETWORK_ERROR', status: null });
+  });
+
+  it.each([
+    ['a network failure', new ApiError('Offline', 'NETWORK_ERROR', null), true],
+    ['a 500', new ApiError('Boom', 'INTERNAL_ERROR', 500), true],
+    ['a 503', new ApiError('Busy', 'HTTP_ERROR', 503), true],
+    ['an unexpected non-API error', new Error('Bug'), true],
+    ['a 400', new ApiError('Bad JSON', 'INVALID_JSON', 400), false],
+    ['a 422', new ApiError('Too many', 'TOO_MANY_ITEMS', 422), false],
+  ])('treats %s as retryable: %s', (_label, error, expected) => {
+    expect(isRetryable(error)).toBe(expected);
   });
 });

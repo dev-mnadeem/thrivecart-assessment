@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchProducts, isAbortError } from '../lib/api';
+import { fetchProducts, isAbortError, isRetryable } from '../lib/api';
 import type { Product } from '../types/api';
 
 export type ProductsState =
-  { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; products: Product[] };
+  | { status: 'loading' }
+  | { status: 'error'; message: string; retryable: boolean }
+  | { status: 'ready'; products: Product[]; maxBasketItems: number };
 
 export function useProducts(): ProductsState & { retry: () => void } {
   const [state, setState] = useState<ProductsState>({ status: 'loading' });
@@ -13,10 +15,14 @@ export function useProducts(): ProductsState & { retry: () => void } {
     const controller = new AbortController();
 
     fetchProducts(controller.signal)
-      .then((products) => setState({ status: 'ready', products }))
+      .then(({ products, maxBasketItems }) => setState({ status: 'ready', products, maxBasketItems }))
       .catch((error: unknown) => {
         if (!isAbortError(error)) {
-          setState({ status: 'error', message: error instanceof Error ? error.message : 'Could not load products.' });
+          setState({
+            status: 'error',
+            message: error instanceof Error ? error.message : 'Could not load products.',
+            retryable: isRetryable(error),
+          });
         }
       });
 

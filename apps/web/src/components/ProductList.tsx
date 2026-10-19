@@ -8,11 +8,13 @@ interface ProductListProps {
   onRetry: () => void;
   quantityOf: (code: ProductCode) => number;
   onAdd: (code: ProductCode) => void;
+  /** False when the basket is full. */
+  canAdd?: boolean;
 }
 
 const grid = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3';
 
-export function ProductList({ state, onRetry, quantityOf, onAdd }: ProductListProps) {
+export function ProductList({ state, onRetry, quantityOf, onAdd, canAdd = true }: ProductListProps) {
   if (state.status === 'loading') {
     return (
       <div aria-busy="true">
@@ -32,7 +34,7 @@ export function ProductList({ state, onRetry, quantityOf, onAdd }: ProductListPr
   }
 
   if (state.status === 'error') {
-    return <ErrorNotice message={state.message} onRetry={onRetry} />;
+    return <ErrorNotice message={state.message} onRetry={state.retryable ? onRetry : undefined} />;
   }
 
   if (state.products.length === 0) {
@@ -46,6 +48,7 @@ export function ProductList({ state, onRetry, quantityOf, onAdd }: ProductListPr
           key={product.code}
           product={product}
           quantityInBasket={quantityOf(product.code)}
+          canAdd={canAdd}
           onAdd={() => onAdd(product.code)}
         />
       ))}

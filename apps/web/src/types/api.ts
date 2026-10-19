@@ -11,6 +11,8 @@ export interface Product {
 
 export interface ProductsResponse {
   products: Product[];
+  /** The most product units a quote may contain; the API rejects larger baskets. */
+  maxBasketItems: number;
 }
 
 export interface QuoteLine {

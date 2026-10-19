@@ -137,4 +137,58 @@ describe('useBasket', () => {
     expect(result.current.quote).toBeNull();
     expect(result.current.quoteStatus).toBe('idle');
   });
+
+  it('stops growing at the API limit', async () => {
+    const fetchMock = mockApi();
+    const initialProps: { max?: number } = { max: 2 };
+    const { result, rerender } = renderHook(({ max }) => useBasket(max), { initialProps });
+
+    act(() => {
+      result.current.add('R01');
+    });
+    expect(result.current.isFull).toBe(false);
+
+    act(() => {
+      result.current.add('R01');
+    });
+    expect(result.current.isFull).toBe(true);
+
+    act(() => {
+      result.current.add('B01');
+    });
+    expect(result.current.entries).toEqual([{ code: 'R01', quantity: 2 }]);
+    expect(result.current.itemCount).toBe(2);
+    await waitFor(() => {
+      expect(result.current.quote?.totalCents).toBe(5437);
+    });
+    const sentBodies = fetchMock.mock.calls.map(([, init]) => (typeof init?.body === 'string' ? init.body : ''));
+    expect(sentBodies.some((body) => body.includes('B01'))).toBe(false);
+
+    act(() => {
+      result.current.decrement('R01');
+    });
+    expect(result.current.isFull).toBe(false);
+
+    rerender({ max: undefined });
+    expect(result.current.maxItems).toBeUndefined();
+    expect(result.current.isFull).toBe(false);
+  });
+
+  it('marks client errors as not retryable', async () => {
+    mockApi({
+      quoteResponse: () =>
+        Promise.resolve(json({ error: { code: 'INVALID_PRODUCT', message: 'Unknown product code: XYZ' } }, 422)),
+    });
+    const { result } = renderHook(() => useBasket());
+
+    act(() => {
+      result.current.add('XYZ');
+    });
+
+    await waitFor(() => {
+      expect(result.current.quoteStatus).toBe('error');
+    });
+    expect(result.current.quoteError).toBe('Unknown product code: XYZ');
+    expect(result.current.quoteErrorRetryable).toBe(false);
+  });
 });

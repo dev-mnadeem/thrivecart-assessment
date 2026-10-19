@@ -166,7 +166,8 @@ curl http://127.0.0.1:8000/api/products
     { "code": "R01", "name": "Red Widget", "priceCents": 3295 },
     { "code": "G01", "name": "Green Widget", "priceCents": 2495 },
     { "code": "B01", "name": "Blue Widget", "priceCents": 795 }
-  ]
+  ],
+  "maxBasketItems": 100
 }
 ```
 
@@ -193,7 +194,7 @@ curl -X POST http://127.0.0.1:8000/api/basket/quote \
 }
 ```
 
-`items` holds one product code per unit and is limited to 100 entries.
+`items` holds one product code per unit and is limited to 100 entries, so the cap counts units, not distinct products. It's a request-size guard for this proof of concept. `GET /api/products` publishes the same number as `maxBasketItems`, and the frontend stops the basket from growing past it.
 
 ### `GET /api/health`
 
@@ -223,7 +224,8 @@ Every error is JSON in the same shape:
 - Products and prices come from `GET /api/products`. Nothing about pricing is hard-coded in the UI.
 - The basket (product code → quantity) lives in React state (`useBasket`). After every change, the full list of codes is sent to `POST /api/basket/quote`, and the UI shows the server's subtotal, offers, delivery and total.
 - **Stale responses** can't win. Each basket change aborts the in-flight request with an `AbortController`, and each result is tagged with the basket it priced, so only the quote for the current basket is shown.
-- Loading, error (with retry) and empty states are covered for both products and quotes. While a new quote loads, the previous totals stay visible but dimmed, so the layout doesn't jump.
+- Loading, error and empty states are covered for both products and quotes. Retry is only offered when it could help: for network failures and 5xx responses. A 4xx means the request itself was rejected, so the UI shows the server's message without a retry button (for a quote, with a hint to adjust the basket). While a new quote loads, the previous totals stay visible but dimmed, so the layout doesn't jump.
+- **Basket limit:** once the basket holds `maxBasketItems` units, the Add and "+" buttons are disabled and the basket says so. Removing an item re-enables them. The API still enforces the limit itself.
 - Accessibility: semantic landmarks and headings, labelled icon buttons, `role="status"` and `role="alert"` messages, visible focus rings, keyboard operation, and `prefers-reduced-motion` support.
 - The layout is responsive: one column on mobile (the header item count links to the basket), and a product grid with a sticky basket on large screens.
 

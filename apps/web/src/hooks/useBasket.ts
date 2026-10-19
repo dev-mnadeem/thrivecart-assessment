@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchQuote, isAbortError } from '../lib/api';
+import { fetchQuote, isAbortError, isRetryable } from '../lib/api';
 import type { ProductCode, Quote } from '../types/api';
 
 export interface BasketEntry {
@@ -16,7 +16,13 @@ export interface BasketState {
   quote: Quote | null;
   quoteStatus: QuoteStatus;
   quoteError: string | null;
+  /** Whether retrying the failed quote could help (network or server error, not a rejected basket). */
+  quoteErrorRetryable: boolean;
   itemCount: number;
+  /** The API's basket size limit, once known. */
+  maxItems: number | undefined;
+  /** True when the basket holds `maxItems` units; adding more is ignored. */
+  isFull: boolean;
   quantityOf: (code: ProductCode) => number;
   add: (code: ProductCode) => void;
   decrement: (code: ProductCode) => void;
@@ -26,15 +32,18 @@ export interface BasketState {
 }
 
 /** Outcome of the most recent quote request, tagged with the basket it priced. */
-type QuoteResult = { key: string; quote: Quote } | { key: string; error: string };
+type QuoteResult = { key: string; quote: Quote } | { key: string; error: string; retryable: boolean };
 
 /**
  * Holds basket quantities on the client and asks the API to price them after every change.
  *
  * Every change aborts the in-flight request, and results are tagged with the basket they
  * priced, so a slow, stale response can never be shown as the current basket's quote.
+ *
+ * `maxItems` is the API's published basket limit; the basket never grows past it, so the
+ * UI does not send a quote the API is certain to reject.
  */
-export function useBasket(): BasketState {
+export function useBasket(maxItems?: number): BasketState {
   const [entries, setEntries] = useState<BasketEntry[]>([]);
   const [lastQuote, setLastQuote] = useState<Quote | null>(null);
   const [result, setResult] = useState<QuoteResult | null>(null);
@@ -63,6 +72,7 @@ export function useBasket(): BasketState {
           setResult({
             key: requestKey,
             error: error instanceof Error ? error.message : 'Could not price your basket.',
+            retryable: isRetryable(error),
           });
         }
       });
@@ -78,14 +88,21 @@ export function useBasket(): BasketState {
     }
   }, []);
 
+  const isFull = maxItems !== undefined && items.length >= maxItems;
+
   const add = useCallback(
-    (code: ProductCode) =>
+    (code: ProductCode) => {
+      if (isFull) {
+        return;
+      }
+
       update(
         entries.some((entry) => entry.code === code)
           ? entries.map((entry) => (entry.code === code ? { ...entry, quantity: entry.quantity + 1 } : entry))
           : [...entries, { code, quantity: 1 }],
-      ),
-    [entries, update],
+      );
+    },
+    [entries, isFull, update],
   );
 
   const decrement = useCallback(
@@ -126,7 +143,10 @@ export function useBasket(): BasketState {
     quote: items.length === 0 ? null : lastQuote,
     quoteStatus,
     quoteError: current && 'error' in current ? current.error : null,
+    quoteErrorRetryable: current !== null && 'error' in current && current.retryable,
     itemCount: items.length,
+    maxItems,
+    isFull,
     quantityOf,
     add,
     decrement,

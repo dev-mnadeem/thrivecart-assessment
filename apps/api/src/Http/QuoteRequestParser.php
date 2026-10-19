@@ -19,6 +19,12 @@ final readonly class QuoteRequestParser
 
     public function __construct(private int $maxItems = 100) {}
 
+    /** The most product units one quote may contain. Published to clients via GET /api/products. */
+    public function maxItems(): int
+    {
+        return $this->maxItems;
+    }
+
     /**
      * @return list<string>
      *

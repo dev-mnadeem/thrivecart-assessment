@@ -47,6 +47,12 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
         </div>
       ) : (
         <>
+          {basket.isFull && basket.maxItems !== undefined && (
+            <p role="status" className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Basket limit reached: up to {basket.maxItems} items.
+            </p>
+          )}
+
           <ul className="mt-2 divide-y divide-slate-100">
             {entries.map((entry) => {
               const product = products.find((candidate) => candidate.code === entry.code);
@@ -65,6 +71,7 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
                   product={product}
                   quantity={entry.quantity}
                   pricedLine={pricedLine}
+                  canIncrement={!basket.isFull}
                   onIncrement={() => basket.add(entry.code)}
                   onDecrement={() => basket.decrement(entry.code)}
                   onRemove={() => basket.remove(entry.code)}
@@ -75,7 +82,12 @@ export function BasketPanel({ basket, products }: BasketPanelProps) {
 
           <div className="mt-2 border-t border-slate-200 pt-4">
             {quoteStatus === 'error' && quoteError ? (
-              <ErrorNotice message={quoteError} onRetry={basket.retryQuote} retryLabel="Retry pricing" />
+              <ErrorNotice
+                message={quoteError}
+                onRetry={basket.quoteErrorRetryable ? basket.retryQuote : undefined}
+                retryLabel="Retry pricing"
+                hint="Adjust your basket to continue."
+              />
             ) : quote ? (
               <div aria-busy={isUpdating} className={isUpdating ? 'opacity-60 transition-opacity' : undefined}>
                 <PriceSummary quote={quote} />

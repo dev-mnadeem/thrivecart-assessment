@@ -15,6 +15,7 @@ function abortable<T>(promise: Promise<T>, signal: AbortSignal | null | undefine
 
 interface MockApiOptions {
   products?: Product[];
+  maxBasketItems?: number;
   quotes?: Record<string, Quote>;
   /** Override the quote response for a basket, e.g. to delay it or return an error. */
   quoteResponse?: (items: string[]) => Promise<Response> | undefined;
@@ -24,13 +25,17 @@ interface MockApiOptions {
 /** Stubs global fetch with an in-memory version of the PHP API. */
 export function mockApi(options: MockApiOptions = {}) {
   const products = options.products ?? defaultProducts;
+  const maxBasketItems = options.maxBasketItems ?? 100;
   const quotes = options.quotes ?? defaultQuotes;
 
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
 
     if (url === '/api/products') {
-      return abortable(options.productsResponse?.() ?? Promise.resolve(json({ products })), init?.signal);
+      return abortable(
+        options.productsResponse?.() ?? Promise.resolve(json({ products, maxBasketItems })),
+        init?.signal,
+      );
     }
 
     if (url === '/api/basket/quote') {

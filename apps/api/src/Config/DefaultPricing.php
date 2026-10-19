@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Acme\Basket\Config;
 
 use Acme\Basket\Domain\Basket;
+use Acme\Basket\Domain\BuyOneGetOneHalfPriceOffer;
 use Acme\Basket\Domain\Catalogue;
 use Acme\Basket\Domain\DeliveryRules;
 use Acme\Basket\Domain\DeliveryTier;
 use Acme\Basket\Domain\OfferInterface;
 use Acme\Basket\Domain\Product;
-use Acme\Basket\Domain\RedWidgetHalfPriceOffer;
+use Acme\Basket\Domain\UnknownProductException;
 
 /**
  * Acme Widget Co's launch catalogue, delivery charges and offers.
@@ -38,15 +39,22 @@ final class DefaultPricing
     }
 
     /**
+     * Offers are built from catalogue products, so an offer for a product that is not
+     * in the catalogue throws UnknownProductException here instead of silently never applying.
+     *
      * @return list<OfferInterface>
+     *
+     * @throws UnknownProductException
      */
-    public static function offers(): array
+    public static function offers(Catalogue $catalogue): array
     {
-        return [new RedWidgetHalfPriceOffer()];
+        return [new BuyOneGetOneHalfPriceOffer($catalogue->get('R01'))];
     }
 
     public static function newBasket(): Basket
     {
-        return new Basket(self::catalogue(), self::deliveryRules(), self::offers());
+        $catalogue = self::catalogue();
+
+        return new Basket($catalogue, self::deliveryRules(), self::offers($catalogue));
     }
 }

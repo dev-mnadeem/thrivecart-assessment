@@ -115,24 +115,26 @@ The basket receives its catalogue, delivery rules and offers through its constru
 
 ```php
 use Acme\Basket\Domain\Basket;
+use Acme\Basket\Domain\BuyOneGetOneHalfPriceOffer;
 use Acme\Basket\Domain\Catalogue;
 use Acme\Basket\Domain\DeliveryRules;
 use Acme\Basket\Domain\DeliveryTier;
 use Acme\Basket\Domain\Product;
-use Acme\Basket\Domain\RedWidgetHalfPriceOffer;
+
+$catalogue = new Catalogue(
+    new Product('R01', 'Red Widget', 3295),
+    new Product('G01', 'Green Widget', 2495),
+    new Product('B01', 'Blue Widget', 795),
+);
 
 $basket = new Basket(
-    new Catalogue(
-        new Product('R01', 'Red Widget', 3295),
-        new Product('G01', 'Green Widget', 2495),
-        new Product('B01', 'Blue Widget', 795),
-    ),
+    $catalogue,
     new DeliveryRules(
         new DeliveryTier(minSubtotalCents: 0, chargeCents: 495),
         new DeliveryTier(minSubtotalCents: 5000, chargeCents: 295),
         new DeliveryTier(minSubtotalCents: 9000, chargeCents: 0),
     ),
-    [new RedWidgetHalfPriceOffer()],
+    [new BuyOneGetOneHalfPriceOffer($catalogue->get('R01'))],
 );
 
 $basket->add('R01');
@@ -144,7 +146,9 @@ $basket->breakdown();  // BasketTotals: lines, applied offers, subtotal, discoun
 
 `add()` throws `UnknownProductException` for codes that aren't in the catalogue. `total()` and `breakdown()` share one calculation path, don't mutate the basket, and give the same result for any order of `add()` calls.
 
-New offers implement `OfferInterface`, which has `label()` and `discountCents(array $items): int`, and are passed to the constructor. `BasketTest::testAcceptsAdditionalOffersWithoutChangingTheBasket` shows this.
+`BuyOneGetOneHalfPriceOffer` works for any product. A "buy one green, get one half price" trial is one more line in `DefaultPricing::offers()`: `new BuyOneGetOneHalfPriceOffer($catalogue->get('G01'))`. The offer takes a `Product` from the catalogue rather than a code, so an offer for a product that isn't in the catalogue throws `UnknownProductException` at start-up instead of silently never applying. Its label defaults to `"<product name>: buy one, get the second half price"` and can be overridden.
+
+Other kinds of offer implement `OfferInterface`, which has `label()` and `discountCents(array $items): int`, and are passed to the constructor. `BasketTest::testAcceptsAdditionalOffersWithoutChangingTheBasket` shows this.
 
 ## API
 
@@ -237,7 +241,7 @@ Every error is JSON in the same shape:
 │   │   │   │   ├── Basket.php, BasketTotals.php, BasketLine.php, AppliedOffer.php
 │   │   │   │   ├── Product.php, Catalogue.php, UnknownProductException.php
 │   │   │   │   ├── DeliveryRules.php, DeliveryTier.php
-│   │   │   │   └── OfferInterface.php, RedWidgetHalfPriceOffer.php
+│   │   │   │   └── OfferInterface.php, BuyOneGetOneHalfPriceOffer.php
 │   │   │   └── Http/          # Request, JsonResponse, router (Application), validation
 │   │   ├── tests/Unit/        # Domain tests
 │   │   ├── tests/Integration/ # In-process HTTP tests

@@ -12,7 +12,7 @@ namespace Acme\Basket\Domain;
  */
 interface OfferInterface
 {
-    /** Short customer-facing label, e.g. "Red Widget: buy one, get one half price". */
+    /** Short customer-facing label, e.g. "Red Widget: buy one, get the second half price". */
     public function label(): string;
 
     /**

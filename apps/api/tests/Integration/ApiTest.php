@@ -21,10 +21,11 @@ final class ApiTest extends TestCase
 
     protected function setUp(): void
     {
+        $catalogue = DefaultPricing::catalogue();
         $this->app = new Application(
-            DefaultPricing::catalogue(),
+            $catalogue,
             DefaultPricing::deliveryRules(),
-            DefaultPricing::offers(),
+            DefaultPricing::offers($catalogue),
             new QuoteRequestParser(maxItems: 100),
         );
     }

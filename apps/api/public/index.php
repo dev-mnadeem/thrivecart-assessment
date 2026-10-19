@@ -9,10 +9,11 @@ use Acme\Basket\Http\Request;
 require __DIR__ . '/../vendor/autoload.php';
 
 // Composition root: the only place default pricing is wired into the HTTP layer.
+$catalogue = DefaultPricing::catalogue();
 $application = new Application(
-    DefaultPricing::catalogue(),
+    $catalogue,
     DefaultPricing::deliveryRules(),
-    DefaultPricing::offers(),
+    DefaultPricing::offers($catalogue),
 );
 
 $application->handle(Request::fromGlobals())->send();

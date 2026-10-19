@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Acme\Basket\Tests\Unit;
 
 use Acme\Basket\Config\DefaultPricing;
+use Acme\Basket\Domain\AppliedOffer;
 use Acme\Basket\Domain\Basket;
+use Acme\Basket\Domain\BuyOneGetOneHalfPriceOffer;
 use Acme\Basket\Domain\Catalogue;
 use Acme\Basket\Domain\OfferInterface;
 use Acme\Basket\Domain\Product;
@@ -99,7 +101,7 @@ final class BasketTest extends TestCase
         $basket = new Basket(
             new Catalogue(new Product('T01', 'Test Widget', $priceCents)),
             DefaultPricing::deliveryRules(),
-            DefaultPricing::offers(),
+            [],
         );
         $basket->add('T01');
 
@@ -185,10 +187,11 @@ final class BasketTest extends TestCase
             }
         };
 
+        $catalogue = DefaultPricing::catalogue();
         $basket = new Basket(
-            DefaultPricing::catalogue(),
+            $catalogue,
             DefaultPricing::deliveryRules(),
-            [...DefaultPricing::offers(), $greenOneOff],
+            [...DefaultPricing::offers($catalogue), $greenOneOff],
         );
 
         foreach (['R01', 'R01', 'G01'] as $code) {
@@ -201,6 +204,30 @@ final class BasketTest extends TestCase
         self::assertCount(2, $totals->appliedOffers);
         // 9085 - 1748 = 7337 discounted subtotal -> $2.95 delivery.
         self::assertSame(7337 + 295, $totals->totalCents());
+    }
+
+    public function testStacksHalfPriceOffersForDifferentProducts(): void
+    {
+        $catalogue = DefaultPricing::catalogue();
+        $basket = new Basket(
+            $catalogue,
+            DefaultPricing::deliveryRules(),
+            [...DefaultPricing::offers($catalogue), new BuyOneGetOneHalfPriceOffer($catalogue->get('G01'))],
+        );
+
+        foreach (['R01', 'G01', 'R01', 'G01'] as $code) {
+            $basket->add($code);
+        }
+
+        $totals = $basket->breakdown();
+
+        self::assertSame(1648 + 1248, $totals->discountCents);
+        self::assertSame(
+            ['Red Widget: buy one, get the second half price', 'Green Widget: buy one, get the second half price'],
+            array_map(static fn(AppliedOffer $offer): string => $offer->label, $totals->appliedOffers),
+        );
+        // 11580 - 2896 = 8684 discounted subtotal -> $2.95 delivery.
+        self::assertSame(8684 + 295, $totals->totalCents());
     }
 
     public function testDiscountNeverExceedsSubtotal(): void

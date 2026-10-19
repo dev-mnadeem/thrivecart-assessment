@@ -174,6 +174,28 @@ final class ApiTest extends TestCase
         );
     }
 
+    public function testUnknownRouteWithMalformedUtf8StillReturnsJson(): void
+    {
+        $response = $this->app->handle(new Request('GET', "/api/\xff"));
+
+        self::assertSame(404, $response->status);
+        self::assertSame(
+            ['error' => ['code' => 'NOT_FOUND', 'message' => "No route for /api/\u{FFFD}."]],
+            self::decode($response),
+        );
+    }
+
+    public function testUnsupportedMalformedUtf8MethodStillReturnsJson(): void
+    {
+        $response = $this->app->handle(new Request("\xff", '/api/products'));
+        $error = self::decode($response)['error'];
+
+        self::assertSame(405, $response->status);
+        self::assertSame('GET', $response->allHeaders()['Allow']);
+        self::assertIsArray($error);
+        self::assertSame('METHOD_NOT_ALLOWED', $error['code']);
+    }
+
     /**
      * @return iterable<string, array{string, string, string}>
      */
@@ -206,7 +228,7 @@ final class ApiTest extends TestCase
      */
     private static function decode(JsonResponse $response): array
     {
-        $data = json_decode($response->body(), true, 512, JSON_THROW_ON_ERROR);
+        $data = json_decode($response->body, true, 512, JSON_THROW_ON_ERROR);
         self::assertIsArray($data);
 
         /** @var array<string, mixed> $data */

@@ -167,6 +167,52 @@ describe('App', () => {
     expect(basket().getByRole('status')).toHaveTextContent('Updating total…');
   });
 
+  it('disables adding once the basket reaches the API limit', async () => {
+    mockApi({ maxBasketItems: 2 });
+    const user = await renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Add Red Widget to basket' }));
+    await user.click(screen.getByRole('button', { name: 'Add Red Widget to basket' }));
+
+    for (const button of screen.getAllByRole('button', { name: /^Add .* to basket$/ })) {
+      expect(button).toBeDisabled();
+    }
+    expect(basket().getByRole('button', { name: 'Add one Red Widget' })).toBeDisabled();
+    expect(basket().getByText('Basket limit reached: up to 2 items.')).toBeInTheDocument();
+    await waitFor(() => expect(basket().getByTestId('basket-total')).toHaveTextContent('$54.37'));
+
+    await user.click(basket().getByRole('button', { name: 'Remove one Red Widget' }));
+
+    expect(screen.getByRole('button', { name: 'Add Blue Widget to basket' })).toBeEnabled();
+    expect(basket().queryByText(/basket limit reached/i)).not.toBeInTheDocument();
+  });
+
+  it('does not offer a retry when the API rejects the basket', async () => {
+    mockApi({
+      quoteResponse: () =>
+        Promise.resolve(
+          json({ error: { code: 'TOO_MANY_ITEMS', message: 'A basket can contain at most 100 items.' } }, 422),
+        ),
+    });
+    const user = await renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Add Blue Widget to basket' }));
+
+    expect(await basket().findByRole('alert')).toHaveTextContent('A basket can contain at most 100 items.');
+    expect(basket().getByText('Adjust your basket to continue.')).toBeInTheDocument();
+    expect(basket().queryByRole('button', { name: 'Retry pricing' })).not.toBeInTheDocument();
+  });
+
+  it('does not offer a retry when products are rejected with a client error', async () => {
+    mockApi({
+      productsResponse: () => Promise.resolve(json({ error: { code: 'NOT_FOUND', message: 'No route.' } }, 404)),
+    });
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No route.');
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+  });
+
   it('ignores a stale quote that resolves after a newer one', async () => {
     let releaseFirst: (response: Response) => void = () => undefined;
     const firstQuote = new Promise<Response>((resolve) => {

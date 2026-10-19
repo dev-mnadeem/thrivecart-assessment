@@ -8,18 +8,20 @@ interface BasketLineItemProps {
   quantity: number;
   /** The server's priced line, if the current quote already reflects this quantity. */
   pricedLine: QuoteLine | undefined;
+  canIncrement: boolean;
   onIncrement: () => void;
   onDecrement: () => void;
   onRemove: () => void;
 }
 
 const iconButton =
-  'inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition-colors hover:bg-slate-100';
+  'inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent';
 
 export function BasketLineItem({
   product,
   quantity,
   pricedLine,
+  canIncrement,
   onIncrement,
   onDecrement,
   onRemove,
@@ -52,7 +54,13 @@ export function BasketLineItem({
             <span className="w-7 text-center font-medium tabular-nums" aria-label={`Quantity ${quantity}`}>
               {quantity}
             </span>
-            <button type="button" onClick={onIncrement} aria-label={`Add one ${product.name}`} className={iconButton}>
+            <button
+              type="button"
+              onClick={onIncrement}
+              disabled={!canIncrement}
+              aria-label={`Add one ${product.name}`}
+              className={iconButton}
+            >
               <Plus aria-hidden="true" className="size-4" />
             </button>
           </div>

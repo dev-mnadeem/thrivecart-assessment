@@ -6,10 +6,11 @@ import type { Product } from '../types/api';
 interface ProductCardProps {
   product: Product;
   quantityInBasket: number;
+  canAdd: boolean;
   onAdd: () => void;
 }
 
-export function ProductCard({ product, quantityInBasket, onAdd }: ProductCardProps) {
+export function ProductCard({ product, quantityInBasket, canAdd, onAdd }: ProductCardProps) {
   return (
     <li className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -29,8 +30,9 @@ export function ProductCard({ product, quantityInBasket, onAdd }: ProductCardPro
       <button
         type="button"
         onClick={onAdd}
+        disabled={!canAdd}
         aria-label={`Add ${product.name} to basket`}
-        className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white transition-colors hover:bg-indigo-700 active:bg-indigo-800"
+        className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white transition-colors hover:bg-indigo-700 active:bg-indigo-800 disabled:bg-slate-300 disabled:text-slate-600"
       >
         <Plus aria-hidden="true" className="size-4" />
         Add to basket

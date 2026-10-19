@@ -50,7 +50,25 @@ final class ApiTest extends TestCase
                 ['code' => 'G01', 'name' => 'Green Widget', 'priceCents' => 2495],
                 ['code' => 'B01', 'name' => 'Blue Widget', 'priceCents' => 795],
             ],
+            'maxBasketItems' => 100,
         ], self::decode($response));
+    }
+
+    public function testProductsReportTheConfiguredBasketLimit(): void
+    {
+        $catalogue = DefaultPricing::catalogue();
+        $app = new Application(
+            $catalogue,
+            DefaultPricing::deliveryRules(),
+            DefaultPricing::offers($catalogue),
+            new QuoteRequestParser(maxItems: 5),
+        );
+
+        $products = $app->handle(new Request('GET', '/api/products'));
+        $overLimit = $app->handle(new Request('POST', '/api/basket/quote', '{"items":["B01","B01","B01","B01","B01","B01"]}'));
+
+        self::assertSame(5, self::decode($products)['maxBasketItems']);
+        self::assertSame(422, $overLimit->status);
     }
 
     public function testQuotesABasketWithFullBreakdown(): void

@@ -1,4 +1,4 @@
-import type { ApiErrorBody, Product, ProductCode, ProductsResponse, Quote, QuoteRequest } from '../types/api';
+import type { ApiErrorBody, ProductCode, ProductsResponse, Quote, QuoteRequest } from '../types/api';
 
 export class ApiError extends Error {
   constructor(
@@ -54,10 +54,8 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   return body as T;
 }
 
-export async function fetchProducts(signal?: AbortSignal): Promise<Product[]> {
-  const body = await request<ProductsResponse>('/api/products', { method: 'GET', signal });
-
-  return body.products;
+export function fetchProducts(signal?: AbortSignal): Promise<ProductsResponse> {
+  return request<ProductsResponse>('/api/products', { method: 'GET', signal });
 }
 
 export function fetchQuote(items: ProductCode[], signal?: AbortSignal): Promise<Quote> {
@@ -69,6 +67,18 @@ export function fetchQuote(items: ProductCode[], signal?: AbortSignal): Promise<
     body: JSON.stringify(payload),
     signal,
   });
+}
+
+/**
+ * Whether repeating the same request could succeed: network failures and 5xx responses.
+ * A 4xx means the request itself was rejected, so sending it again cannot help.
+ */
+export function isRetryable(error: unknown): boolean {
+  if (!(error instanceof ApiError)) {
+    return true;
+  }
+
+  return error.status === null || error.status >= 500;
 }
 
 export function isAbortError(error: unknown): boolean {

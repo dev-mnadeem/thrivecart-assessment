@@ -76,6 +76,7 @@ final readonly class Application
                 'name' => $product->name,
                 'priceCents' => $product->priceCents,
             ], $this->catalogue->all()),
+            'maxBasketItems' => $this->parser->maxItems(),
         ]);
     }
 

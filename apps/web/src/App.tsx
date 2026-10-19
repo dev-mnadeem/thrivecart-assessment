@@ -6,7 +6,7 @@ import { useProducts } from './hooks/useProducts';
 
 export default function App() {
   const products = useProducts();
-  const basket = useBasket();
+  const basket = useBasket(products.status === 'ready' ? products.maxBasketItems : undefined);
 
   return (
     <>
@@ -37,7 +37,13 @@ export default function App() {
             <h2 id="products-heading" className="sr-only">
               Products
             </h2>
-            <ProductList state={products} onRetry={products.retry} quantityOf={basket.quantityOf} onAdd={basket.add} />
+            <ProductList
+              state={products}
+              onRetry={products.retry}
+              quantityOf={basket.quantityOf}
+              onAdd={basket.add}
+              canAdd={!basket.isFull}
+            />
           </section>
 
           <BasketPanel basket={basket} products={products.status === 'ready' ? products.products : []} />

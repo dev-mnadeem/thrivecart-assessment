@@ -8,6 +8,8 @@ A shopping basket for Acme Widget Co: a PHP pricing API and a React + TypeScript
 
 The original brief is in [`docs/ThriveCart-Assessment.md`](docs/ThriveCart-Assessment.md).
 
+![Basket priced by the running PHP API](docs/screenshots/basket.png)
+
 ## Requirements
 
 | Tool     | Version                         | Notes                                     |
@@ -17,12 +19,12 @@ The original brief is in [`docs/ThriveCart-Assessment.md`](docs/ThriveCart-Asses
 | PHP      | 8.3+ with `ext-json`            | Must be installed locally and on `PATH`   |
 | Composer | 2.x                             | Must be installed locally and on `PATH`   |
 
-No database, Docker or secrets are needed.
+No database or secrets are needed for local development. Docker is optional.
 
 ## Getting started
 
 ```bash
-git clone <repository-url> acme-widget-basket
+git clone https://github.com/dev-mnadeem/thrivecart-assessment.git acme-widget-basket
 cd acme-widget-basket
 
 nvm use                      # Node 22.20.0 from .nvmrc
@@ -274,3 +276,38 @@ Every error is JSON in the same shape:
 - One currency (USD); amounts assume two-decimal cents.
 - Offers are evaluated independently and their discounts summed. Offers that compete for the same items would need an explicit precedence rule.
 - The PHP built-in server is for local development only. Production would sit behind nginx/Apache + PHP-FPM.
+
+## Quote workflow
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Basket as React basket
+  participant API as PHP quote API
+  participant Rules as Domain pricing rules
+  User->>Basket: Add or remove a product
+  Basket->>API: POST /api/basket/quote (product codes)
+  API->>Rules: Validate catalogue and apply offers/delivery
+  Rules-->>API: Integer-cent totals
+  API-->>Basket: Itemized quote
+  Basket->>Basket: Ignore stale responses
+```
+
+Native verification used Node 22 and PHP 8.5: 99 PHP tests, 53 frontend tests,
+PHPStan and TypeScript checks passed. An actual browser request for two red widgets
+and one blue widget returned **$60.32**, including the half-price offer and delivery.
+The desktop and [mobile capture](docs/screenshots/basket-mobile.png) show that same
+server-backed quote. This is a pricing demonstration, not a purchase or payment.
+
+### Optional containers
+
+`docker compose up --build` defines a non-root PHP-FPM service and a frontend
+served by nginx at http://localhost:5173. nginx forwards `/api/` to the fixed PHP
+front controller; provider keys and a database are unnecessary. Both images are
+defined in `Dockerfile.api` and `Dockerfile.web`. Container startup has not been
+verified here because the Docker daemon is unavailable; the native setup above was
+exercised instead.
+
+## Author
+
+[**Muhammad Nadeem**](https://github.com/dev-mnadeem)

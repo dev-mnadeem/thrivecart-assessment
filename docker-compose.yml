@@ -1,0 +1,13 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    read_only: true
+    tmpfs: [/tmp]
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports: ["127.0.0.1:5173:8080"]
+    depends_on: [api]
